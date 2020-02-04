@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CharachterController : MonoBehaviour
 {
-
+    #region Variables
     [Header("Movement Customizations")]
     [Range(1f, 5f)]
     public int m_screenShake = 1;
@@ -15,6 +15,8 @@ public class CharachterController : MonoBehaviour
     [Range(10f, 15f)]
     public int m_RunMultiplier = 12;
 
+    [Range(1f, 7f)]
+    public int m_DuckMultiplier = 4;
 
     [Range(1f, 15f)]
     public int m_XLookSensitivity = 10;
@@ -39,40 +41,36 @@ public class CharachterController : MonoBehaviour
     float v_look;
     float h_look;
     bool run_button;
+    bool duck_button;
 
 
     bool run_toggle;
-   
+    bool duck_toggle;
+
     Rigidbody rb;
-   
-    public enum MovementType {
-    idle,
-    walk,
-    run,
-    }
-
-    public enum ActivityState { 
-    grapple,
-    slide,
-    wallrun,
-    }
-
-    public MovementType charachterMovement;
+    Transform parentTransform;
+    [Header("Charachter States")]
+    public CharachterState charachterState = new CharachterState();
 
     float rotationX;
     float rotationY;
 
-    public List<float> lookRotationInputs = new List<float>();
-    public List<float> movementInputs = new List<float>();
+    List<float> lookRotationInputs = new List<float>();
+    List<float> movementInputs = new List<float>();
 
     Vector3 moveDirection;
 
+    Vector3 duckHeight = new Vector3(1, 0.5f, 1);
+    Vector3 normalHeight = new Vector3(1, 1, 1);
+
+    #endregion
+
     private void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        parentTransform = GetComponentInParent<Transform>();
+        rb = GetComponentInParent<Rigidbody>();
         PopulateList(lookRotationInputs, 2);
         PopulateList(movementInputs, 2);
-        charachterMovement = MovementType.idle;
     }
 
     void FixedUpdate()
@@ -80,18 +78,18 @@ public class CharachterController : MonoBehaviour
         Inputs();
     }
 
-    
     void Inputs() {
-        
+
         // Get Inputs from Joystick for Movement
         vert_move   = Input.GetAxis("Vertical");
         hor_move = Input.GetAxis("Horizontal");
         v_look = Input.GetAxis("Vertical Look");
         h_look = Input.GetAxis("Horizontal Look");
         run_button = Input.GetButtonDown("Run");
+        duck_button = Input.GetButtonDown("Duck");
 
         // Detects the state the player currently is.
-        charachterMovement = CurrentMovementStage();
+        charachterState = CurrentMovementStage();
 
         // Methods on the player
         Movement(vert_move, hor_move);
@@ -112,14 +110,26 @@ public class CharachterController : MonoBehaviour
     /// <param name="hor"></param>
     void Movement(float vert, float hor) {
 
-        Vector3 localMovementVec = Vector3.Normalize(transform.localPosition);
+
+        Vector3 localMovementVec = Vector3.Normalize(transform.parent.localPosition);
 
         //Get the direction in the local co-ordinates of the player to move.
         moveDirection = transform.TransformDirection(new Vector3(localMovementVec.x * hor, 0, localMovementVec.z * vert));
-        
+
         //Multiplier added to the given direction vector according to the Input State.
-        if (charachterMovement == MovementType.walk) { moveDirection *= m_WalkMultiplier; }
-        else if (charachterMovement == MovementType.run) { moveDirection *= m_RunMultiplier; }
+
+        if (charachterState.characheter_movement == MovementType.walk && charachterState.charachter_activity == ActivityState.none) 
+        { 
+            moveDirection *= m_WalkMultiplier;
+            parentTransform.localScale = normalHeight;
+        }
+        else if (charachterState.characheter_movement == MovementType.run) { moveDirection *= m_RunMultiplier; }
+        else if (charachterState.characheter_movement == MovementType.walk && charachterState.charachter_activity == ActivityState.duck) 
+        {
+            Debug.LogError("Here");
+            moveDirection *= m_DuckMultiplier;
+            parentTransform.localScale = duckHeight;
+        }
 
         //Movement
         rb.MovePosition(rb.position + moveDirection * Time.fixedDeltaTime);
@@ -161,6 +171,13 @@ public class CharachterController : MonoBehaviour
 
     }
 
+
+    void Slide() { 
+        
+    }
+
+
+
     #endregion
 
     #region Helper Functions
@@ -187,8 +204,10 @@ public class CharachterController : MonoBehaviour
     /// <summary>
     /// Returns the current Movement State of the player according to the game state.
     /// </summary>
-    /// <returns>MovementType</returns>
-    MovementType CurrentMovementStage() {
+    /// <returns>CharahterState</returns>
+    CharachterState CurrentMovementStage() {
+
+        CharachterState currentCharachterState;
 
         /*
          * Adds the value of current frame and keeps the value of the previous frame to compare if the 
@@ -214,24 +233,58 @@ public class CharachterController : MonoBehaviour
         }
 
 
-        //Checks if player at rest and return idle state.
-        if (vert_move == 0 && hor_move == 0)
-            return MovementType.idle;
-
+        //Checks if there is no input then return idle state.
+        
 
         //Checks the value of the Run toggle to detect if player has pressed the Run Toggle for a state change.
-        if (run_button) run_toggle = true;
+        if (run_button)
+        {
+            run_toggle = true;
+            duck_toggle = false;
+        }
+
+        if (duck_button) {
+            duck_toggle = !duck_toggle;
+        }
+
+        if (duck_toggle) { run_toggle = false; }
 
 
-        //Run/Walk State Detection Logic.
-        if (run_toggle && Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
-            return MovementType.run;
+        //MovementType and ActivityState Detection Logic.
+        if (vert_move == 0 && hor_move == 0)
+        {
+            currentCharachterState = new CharachterState(MovementType.idle, ActivityState.none);
+            Debug.Log("<color=red> Idle</color>");
+            return currentCharachterState;
+        }
+        else if (run_toggle && Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
+        {
+            currentCharachterState = new CharachterState(MovementType.run, ActivityState.none);
+            Debug.Log("<color=blue> Run, None</color>");
+            return currentCharachterState;
+        }
         else if (run_toggle && Mathf.Abs(movementInputs[0]) <= 0.85f && Mathf.Abs(movementInputs[1]) <= 0.85f)
         {
             run_toggle = false;
-            return MovementType.walk;
+            Debug.Log("<color=green> Walk, None</color>");
+            currentCharachterState = new CharachterState(MovementType.walk, ActivityState.none);
+            return currentCharachterState;
+
         }
-        else return MovementType.walk;
+        else if (duck_toggle && charachterState.characheter_movement == MovementType.walk || charachterState.characheter_movement == MovementType.idle) {
+            Debug.Log("<color=yellow> Walk, Duck</color>");
+            currentCharachterState = new CharachterState(MovementType.walk, ActivityState.duck);
+            return currentCharachterState;
+        }
+        else
+        {
+            Debug.Log("<color=green> Walk, None</color>");
+            currentCharachterState = new CharachterState(MovementType.walk, ActivityState.none);
+            return currentCharachterState;
+        }
+
+        
+
     }
     #endregion
 }
