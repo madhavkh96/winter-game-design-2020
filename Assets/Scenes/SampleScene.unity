@@ -365,16 +365,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_screenShake: 1
-  m_movementMultiplier: 5
-  m_lookSensitivity: 10
+  m_WalkMultiplier: 7
+  m_RunMultiplier: 12
+  m_XLookSensitivity: 6
+  m_YLookSensitivity: 3
   m_minimumXLook: -360
   m_maximumXLook: 360
   m_minimumYLook: -60
   m_maximumYLook: 60
   frameCounter: 50
-  rotListX: []
-  rotListY: []
-  movement_Inputs: []
+  charachterMovement: 0
+  lookRotationInputs: []
+  movementInputs: []
 --- !u!54 &632509610
 Rigidbody:
   m_ObjectHideFlags: 0

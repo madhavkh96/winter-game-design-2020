@@ -16,8 +16,11 @@ public class CharachterController : MonoBehaviour
     public int m_RunMultiplier = 12;
 
 
-    [Range(1f, 360f)]
-    public int m_lookSensitivity = 180;
+    [Range(1f, 15f)]
+    public int m_XLookSensitivity = 10;
+
+    [Range(1f, 15f)]
+    public int m_YLookSensitivity = 10;
 
     [Header("Horizontal-Look Restraints")]
     public float m_minimumXLook = -360f;
@@ -87,42 +90,70 @@ public class CharachterController : MonoBehaviour
         h_look = Input.GetAxis("Horizontal Look");
         run_button = Input.GetButtonDown("Run");
 
+        // Detects the state the player currently is.
         charachterMovement = CurrentMovementStage();
 
-        // Methods
+        // Methods on the player
         Movement(vert_move, hor_move);
 
         RotateVertical(v_look);
 
         if (!StillLooking(lookRotationInputs))
-            RotateHorizontal(h_look, v_look);
+            RotateHorizontal(h_look);
 
     }
+
     #region Movement And Rotation
+
+    /// <summary>
+    /// Moves the player in their local axes.
+    /// </summary>
+    /// <param name="vert"></param>
+    /// <param name="hor"></param>
     void Movement(float vert, float hor) {
 
         Vector3 localMovementVec = Vector3.Normalize(transform.localPosition);
 
+        //Get the direction in the local co-ordinates of the player to move.
         moveDirection = transform.TransformDirection(new Vector3(localMovementVec.x * hor, 0, localMovementVec.z * vert));
         
+        //Multiplier added to the given direction vector according to the Input State.
         if (charachterMovement == MovementType.walk) { moveDirection *= m_WalkMultiplier; }
         else if (charachterMovement == MovementType.run) { moveDirection *= m_RunMultiplier; }
 
-
+        //Movement
         rb.MovePosition(rb.position + moveDirection * Time.fixedDeltaTime);
     }
 
-    void RotateHorizontal( float hor, float vert) {
-        rotationX = hor * m_lookSensitivity;
+
+    /// <summary>
+    /// Horizontal rotation done according to the given input float value; 
+    /// 1.0f >= vert >= -1.0f
+    /// </summary>
+    /// <param name="hor"></param>
+    void RotateHorizontal( float hor) {
+        //Adds the rotation angle according to the input and sensitivity
+        rotationX = hor * m_XLookSensitivity;
+
+        // Makes the Vector according to along which axis the rotation should be added and by what magnitude.
         transform.localEulerAngles += new Vector3(0, rotationX, 0);
     }
 
-    void RotateVertical(float vert) {
 
-        rotationY = vert * m_lookSensitivity;
+    /// <summary>
+    /// Vertical rotation done according to the given input float value; 
+    /// 1.0f >= vert >= -1.0f
+    /// </summary>
+    /// <param name="vert"></param>
+    void RotateVertical(float vert) {
+        
+        // Adds the rotation angle according to the input and sensitivity
+        rotationY = vert * m_YLookSensitivity;
+        
+        // Makes the Vector according to along which axis the rotation should be and by what magnitude.
         Vector3 rotationYVector = new Vector3(rotationY, 0, 0);
         
-
+        //Clamps the rotation between the specified values while rotating just the camera.
         if (Camera.main.transform.eulerAngles.x + rotationYVector.x > 45 &&
             Camera.main.transform.eulerAngles.x + rotationYVector.x < 300)
             return;
@@ -133,8 +164,13 @@ public class CharachterController : MonoBehaviour
     #endregion
 
     #region Helper Functions
-    bool StillLooking(List<float> values) {
 
+    /// <summary>
+    /// Checks if the player is still interacting with the Right Joystick in one movement.
+    /// </summary>
+    /// <param name="values"></param>
+    /// <returns>bool</returns>
+    bool StillLooking(List<float> values) {
         if (Mathf.Abs(values[0]) > Mathf.Abs(values[1])) return true;
         else if (Mathf.Abs(values[0]) == 1 && Mathf.Abs(values[1]) == 1 
                 || Mathf.Abs(values[0]) == -1 && Mathf.Abs(values[1]) == -1) return false;
@@ -148,10 +184,16 @@ public class CharachterController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns the current Movement State of the player according to the game state.
+    /// </summary>
+    /// <returns>MovementType</returns>
     MovementType CurrentMovementStage() {
 
-        if (run_button) run_toggle = true;
-
+        /*
+         * Adds the value of current frame and keeps the value of the previous frame to compare if the 
+         * player is still moving around.             
+         */
         movementInputs.Add(vert_move);
 
         if (movementInputs.Count >= 2)
@@ -159,6 +201,11 @@ public class CharachterController : MonoBehaviour
             movementInputs.RemoveAt(0);
         }
 
+
+        /*
+         * Adds the value of current frame and keeps the value of the previous frame to compare if the 
+         * player is still moving their Right Joystick to look around.
+         */
         lookRotationInputs.Add(h_look);
 
         if (lookRotationInputs.Count >= 2)
@@ -167,8 +214,16 @@ public class CharachterController : MonoBehaviour
         }
 
 
-        Debug.Log(run_toggle);
+        //Checks if player at rest and return idle state.
+        if (vert_move == 0 && hor_move == 0)
+            return MovementType.idle;
 
+
+        //Checks the value of the Run toggle to detect if player has pressed the Run Toggle for a state change.
+        if (run_button) run_toggle = true;
+
+
+        //Run/Walk State Detection Logic.
         if (run_toggle && Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
             return MovementType.run;
         else if (run_toggle && Mathf.Abs(movementInputs[0]) <= 0.85f && Mathf.Abs(movementInputs[1]) <= 0.85f)
