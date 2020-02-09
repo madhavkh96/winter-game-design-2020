@@ -24,6 +24,9 @@ public class CharachterController : MonoBehaviour
     [Range(1f, 15f)]
     public int m_YLookSensitivity = 10;
 
+    [Range(1f, 10f)]
+    public int m_jumpForce = 2;
+
     [Header("Horizontal-Look Restraints")]
     public float m_minimumXLook = -360f;
     public float m_maximumXLook =  360f;
@@ -42,10 +45,10 @@ public class CharachterController : MonoBehaviour
     float h_look;
     bool run_button;
     bool duck_button;
+    public bool jump_button;
 
-
-    bool run_toggle;
-    bool duck_toggle;
+    public bool run_toggle;
+    public bool duck_toggle;
 
     Rigidbody rb;
     Transform parentTransform;
@@ -55,11 +58,12 @@ public class CharachterController : MonoBehaviour
     float rotationX;
     float rotationY;
 
+    public bool isGrounded = true;
+
     List<float> lookRotationInputs = new List<float>();
     List<float> movementInputs = new List<float>();
 
     Vector3 moveDirection;
-
     Vector3 duckHeight = new Vector3(1, 0.5f, 1);
     Vector3 normalHeight = new Vector3(1, 1, 1);
 
@@ -76,6 +80,7 @@ public class CharachterController : MonoBehaviour
     void FixedUpdate()
     {
         Inputs();
+        SetCharachterLocation();
     }
 
     void Inputs() {
@@ -87,6 +92,7 @@ public class CharachterController : MonoBehaviour
         h_look = Input.GetAxis("Horizontal Look");
         run_button = Input.GetButtonDown("Run");
         duck_button = Input.GetButtonDown("Duck");
+        jump_button = Input.GetButtonDown("Jump");
 
         // Detects the state the player currently is.
         charachterState = CurrentMovementStage();
@@ -99,6 +105,7 @@ public class CharachterController : MonoBehaviour
         if (!StillLooking(lookRotationInputs))
             RotateHorizontal(h_look);
 
+        if (jump_button && isGrounded) { Jump(); }
     }
 
     #region Movement And Rotation
@@ -110,25 +117,19 @@ public class CharachterController : MonoBehaviour
     /// <param name="hor"></param>
     void Movement(float vert, float hor) {
 
-
-        Vector3 localMovementVec = Vector3.Normalize(transform.parent.localPosition);
-
         //Get the direction in the local co-ordinates of the player to move.
-        moveDirection = transform.TransformDirection(new Vector3(localMovementVec.x * hor, 0, localMovementVec.z * vert));
+        moveDirection = transform.TransformDirection(new Vector3( hor, 0, vert));
 
         //Multiplier added to the given direction vector according to the Input State.
 
         if (charachterState.characheter_movement == MovementType.walk && charachterState.charachter_activity == ActivityState.none) 
         { 
             moveDirection *= m_WalkMultiplier;
-            parentTransform.localScale = normalHeight;
         }
         else if (charachterState.characheter_movement == MovementType.run) { moveDirection *= m_RunMultiplier; }
         else if (charachterState.characheter_movement == MovementType.walk && charachterState.charachter_activity == ActivityState.duck) 
         {
-            Debug.LogError("Here");
             moveDirection *= m_DuckMultiplier;
-            parentTransform.localScale = duckHeight;
         }
 
         //Movement
@@ -146,7 +147,7 @@ public class CharachterController : MonoBehaviour
         rotationX = hor * m_XLookSensitivity;
 
         // Makes the Vector according to along which axis the rotation should be added and by what magnitude.
-        transform.localEulerAngles += new Vector3(0, rotationX, 0);
+        transform.parent.transform.localEulerAngles += new Vector3(0, rotationX, 0);
     }
 
 
@@ -173,10 +174,12 @@ public class CharachterController : MonoBehaviour
 
 
     void Slide() { 
-        
+        //Stub for Slide Mechanics    
     }
 
-
+    void Jump() {
+        rb.AddForce(parentTransform.up * m_jumpForce, ForceMode.Impulse);
+    }
 
     #endregion
 
@@ -247,17 +250,18 @@ public class CharachterController : MonoBehaviour
             duck_toggle = !duck_toggle;
         }
 
-        if (duck_toggle) { run_toggle = false; }
+        if (duck_toggle)
+        {
+            run_toggle = false;
+            parentTransform.localScale = duckHeight;
+        }
+        else {
+            parentTransform.localScale = normalHeight;
+        }
 
 
         //MovementType and ActivityState Detection Logic.
-        if (vert_move == 0 && hor_move == 0)
-        {
-            currentCharachterState = new CharachterState(MovementType.idle, ActivityState.none);
-            Debug.Log("<color=red> Idle</color>");
-            return currentCharachterState;
-        }
-        else if (run_toggle && Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
+        if (run_toggle && Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
         {
             currentCharachterState = new CharachterState(MovementType.run, ActivityState.none);
             Debug.Log("<color=blue> Run, None</color>");
@@ -271,9 +275,16 @@ public class CharachterController : MonoBehaviour
             return currentCharachterState;
 
         }
-        else if (duck_toggle && charachterState.characheter_movement == MovementType.walk || charachterState.characheter_movement == MovementType.idle) {
-            Debug.Log("<color=yellow> Walk, Duck</color>");
+        else if (duck_toggle && charachterState.characheter_movement == MovementType.walk ||
+                 duck_toggle && charachterState.characheter_movement == MovementType.idle) {
+            Debug.Log("<color=yellow> Walk / Idle, Duck</color>");
             currentCharachterState = new CharachterState(MovementType.walk, ActivityState.duck);
+            return currentCharachterState;
+        }
+        else if (vert_move == 0 && hor_move == 0)
+        {
+            currentCharachterState = new CharachterState(MovementType.idle, ActivityState.none);
+            Debug.Log("<color=red> Idle</color>");
             return currentCharachterState;
         }
         else
@@ -282,9 +293,17 @@ public class CharachterController : MonoBehaviour
             currentCharachterState = new CharachterState(MovementType.walk, ActivityState.none);
             return currentCharachterState;
         }
+    }
 
-        
+    void SetCharachterLocation() {
 
+        if (CharachterLocState.instance.currentCharachterLocation == CharachterLocState.CharachterLocation.grounded) {
+            isGrounded = true;
+        }
+        if (CharachterLocState.instance.currentCharachterLocation == CharachterLocState.CharachterLocation.inAir) {
+            isGrounded = false;
+        }
+    
     }
     #endregion
 }
