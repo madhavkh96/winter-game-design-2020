@@ -7,7 +7,7 @@ public class OutOfBounds : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if(other.gameObject.tag == "Player"){
-            other.gameObject.GetComponent<Respawner>().playerRespawn();
+            other.gameObject.GetComponent<Respawner>().playerRespawn("Falling");
         }
     }
 
