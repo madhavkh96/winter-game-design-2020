@@ -59,6 +59,7 @@ MonoBehaviour:
   m_minimumYLook: -60
   m_maximumYLook: 60
   frameCounter: 50
+  jump_button: 0
   run_toggle: 0
   duck_toggle: 0
   isGrounded: 1
@@ -136,7 +137,7 @@ GameObject:
   - component: {fileID: 6832564832041630324}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
