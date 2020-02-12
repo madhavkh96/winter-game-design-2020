@@ -55,6 +55,7 @@ MonoBehaviour:
   m_YLookSensitivity: 3
   m_jumpForce: 6
   m_FallMultiplier: 2.5
+  m_ClimbHeight: 2
   m_minimumXLook: -360
   m_maximumXLook: 360
   m_minimumYLook: -60
@@ -296,7 +297,7 @@ GameObject:
   - component: {fileID: 1945712538275740687}
   - component: {fileID: 5426565049123393625}
   m_Layer: 0
-  m_Name: PlayerFeet
+  m_Name: Playe Feet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -338,7 +339,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7461055524664973821}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d910f9d93bb8a694db06c728dff8c42d, type: 3}
+  m_Script: {fileID: 11500000, guid: 2445e5e3436558d46ad7ca5608f57247, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentCharachterLocation: 0
+  currentCharacterLocation: 0
