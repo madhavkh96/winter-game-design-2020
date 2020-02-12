@@ -27,6 +27,9 @@ public class CharachterController : MonoBehaviour
     [Range(1f, 10f)]
     public int m_jumpForce = 2;
 
+    [Range(1, 4)]
+    public float m_FallMultiplier = 2.5f;
+
     [Header("Horizontal-Look Restraints")]
     public float m_minimumXLook = -360f;
     public float m_maximumXLook =  360f;
@@ -47,8 +50,8 @@ public class CharachterController : MonoBehaviour
     bool duck_button;
     public bool jump_button;
 
-    public bool run_toggle;
-    public bool duck_toggle;
+    bool run_toggle;
+    bool duck_toggle;
 
     Rigidbody rb;
     Transform parentTransform;
@@ -59,6 +62,7 @@ public class CharachterController : MonoBehaviour
     float rotationY;
 
     public bool isGrounded = true;
+    public bool wallHitClimb = true;
 
     List<float> lookRotationInputs = new List<float>();
     List<float> movementInputs = new List<float>();
@@ -66,6 +70,14 @@ public class CharachterController : MonoBehaviour
     Vector3 moveDirection;
     Vector3 duckHeight = new Vector3(1, 0.5f, 1);
     Vector3 normalHeight = new Vector3(1, 1, 1);
+
+    int layerMask = 1 << 8;
+
+    RaycastHit hit;
+
+    //Bool Checks
+    bool jump_Called = false;
+
 
     #endregion
 
@@ -92,7 +104,7 @@ public class CharachterController : MonoBehaviour
         h_look = Input.GetAxis("Horizontal Look");
         run_button = Input.GetButtonDown("Run");
         duck_button = Input.GetButtonDown("Duck");
-        jump_button = Input.GetButtonDown("Jump");
+        jump_button = Input.GetButton("Jump");
 
         // Detects the state the player currently is.
         charachterState = CurrentMovementStage();
@@ -106,6 +118,10 @@ public class CharachterController : MonoBehaviour
             RotateHorizontal(h_look);
 
         if (jump_button && isGrounded) { Jump(); }
+        if (!isGrounded) BetterJump();
+
+
+        RayCollisionClimb();
     }
 
     #region Movement And Rotation
@@ -116,6 +132,9 @@ public class CharachterController : MonoBehaviour
     /// <param name="vert"></param>
     /// <param name="hor"></param>
     void Movement(float vert, float hor) {
+
+        //While Climbing don't take any inputs
+        if (jump_button && wallHitClimb) { vert = Mathf.Clamp(vert, -1, 0); }
 
         //Get the direction in the local co-ordinates of the player to move.
         moveDirection = transform.TransformDirection(new Vector3( hor, 0, vert));
@@ -136,6 +155,11 @@ public class CharachterController : MonoBehaviour
         rb.MovePosition(rb.position + moveDirection * Time.fixedDeltaTime);
     }
 
+    void BetterJump() {
+        if (rb.velocity.y < 0) {
+            rb.velocity += Vector3.up * Physics.gravity.y * (m_FallMultiplier - 1) * Time.fixedDeltaTime;
+        }
+    }
 
     /// <summary>
     /// Horizontal rotation done according to the given input float value; 
@@ -178,9 +202,19 @@ public class CharachterController : MonoBehaviour
     }
 
     void Jump() {
-        rb.AddForce(parentTransform.up * m_jumpForce, ForceMode.Impulse);
-    }
+        Debug.Log("Jump called");
 
+        if (!wallHitClimb && !jump_Called)
+        {
+            rb.AddForce(parentTransform.up * m_jumpForce, ForceMode.Impulse);
+            jump_Called = true;
+        }
+        else if (wallHitClimb && !jump_Called)
+        {
+            rb.AddForce(parentTransform.up * m_jumpForce * 2, ForceMode.Impulse);
+            jump_Called = true;
+        }
+    }
     #endregion
 
     #region Helper Functions
@@ -298,6 +332,7 @@ public class CharachterController : MonoBehaviour
     void SetCharachterLocation() {
 
         if (CharachterLocState.instance.currentCharachterLocation == CharachterLocState.CharachterLocation.grounded) {
+            jump_Called = false;
             isGrounded = true;
         }
         if (CharachterLocState.instance.currentCharachterLocation == CharachterLocState.CharachterLocation.inAir) {
@@ -305,5 +340,22 @@ public class CharachterController : MonoBehaviour
         }
     
     }
+
+
+    void RayCollisionClimb() {
+
+        if (Physics.Raycast(Camera.main.transform.position, transform.TransformDirection(Vector3.forward), out hit, 1, layerMask))
+        {
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.red);
+            wallHitClimb = true;
+        }
+        else {
+            wallHitClimb = false;
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * 2, Color.white);
+        }
+        
+    }
+
     #endregion
+
 }

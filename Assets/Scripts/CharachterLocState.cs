@@ -24,20 +24,31 @@ public class CharachterLocState : MonoBehaviour
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
+
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.CompareTag("Ground")) {
+        if (other.gameObject.CompareTag("Ground"))
+        {
             currentCharachterLocation = CharachterLocation.grounded;
         }
-        else if (collision.gameObject.CompareTag("Wall"))
+        else if (other.gameObject.CompareTag("Wall"))
         {
             currentCharachterLocation = CharachterLocation.onWall;
         }
     }
 
-    private void OnCollisionExit(Collision collision)
+
+    private void OnTriggerStay(Collider other)
     {
-        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("")) {
+        if (other.gameObject.CompareTag("Ground")) {
+            currentCharachterLocation = CharachterLocation.grounded;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.CompareTag("Ground") || other.gameObject.CompareTag("Wall"))
+        {
             currentCharachterLocation = CharachterLocation.inAir;
         }
     }
