@@ -605,6 +605,16 @@ PrefabInstance:
       propertyPath: m_ClimbHeight
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 369968435807643432, guid: 52b4b23f58e555841a2b72d436f479e0,
+        type: 3}
+      propertyPath: m_XLookSensitivity
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 369968435807643434, guid: 52b4b23f58e555841a2b72d436f479e0,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 369968435916177302, guid: 52b4b23f58e555841a2b72d436f479e0,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -664,6 +674,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 2991962844291051091, guid: 52b4b23f58e555841a2b72d436f479e0,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6832564832041630324, guid: 52b4b23f58e555841a2b72d436f479e0,
         type: 3}
