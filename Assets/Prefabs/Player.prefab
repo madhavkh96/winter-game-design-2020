@@ -109,20 +109,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_screenShake: 1
-  m_WalkMultiplier: 3
+  m_WalkMultiplier: 7
   m_RunMultiplier: 12
   m_DuckMultiplier: 4
-  m_XLookSensitivity: 6
-  m_YLookSensitivity: 3
-  m_jumpForce: 6
+  m_XLookSensitivity: 10
+  m_YLookSensitivity: 10
+  m_jumpForce: 2
   m_FallMultiplier: 2.5
   m_ClimbHeight: 2
   m_minimumXLook: -360
   m_maximumXLook: 360
   m_minimumYLook: -60
   m_maximumYLook: 60
-  m_Animator: {fileID: 6991596139333700691}
-  frameCounter: 50
+  m_Animator: {fileID: 0}
+  frameCounter: 10
   jump_button: 0
   isGrounded: 1
   wallHitClimb: 1
@@ -184,6 +184,7 @@ GameObject:
   - component: {fileID: 369968435916177305}
   - component: {fileID: 1726586737}
   - component: {fileID: 358766802853127812}
+  - component: {fileID: -1505235042446873593}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -249,6 +250,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 2.04, z: 1}
   m_Center: {x: 0, y: 1.08, z: 0}
+--- !u!114 &-1505235042446873593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 369968435916177303}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd81cda2481a14f3b95da471df2e1c94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &369968436013539056
 GameObject:
   m_ObjectHideFlags: 0
