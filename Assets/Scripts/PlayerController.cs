@@ -94,7 +94,9 @@ public class PlayerController : MonoBehaviour
     //Bool Checks
     bool jump_Called = false;
     bool climb_timer_countdown = false;
-    public float climbDistance = 2;
+    float climbDistance = 2;
+    bool wallRun_timer_countdown = false;
+    public float WallRunDist = 2;
 
     #endregion
 
@@ -120,23 +122,8 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (climb_timer_countdown && climbDistance > 0)
-        {
-            climbDistance = HelperMethods.CountDown(climbDistance);
-            if (m_thirdPersonMode)
-                m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
-        }
-        else if (climbDistance < 0) { 
-            climb_timer_countdown = false;
-            rb.useGravity = true;
-        }
-        
-        if (!climb_timer_countdown)
-        {
-            climbDistance = 2.0f;
-            if (m_thirdPersonMode)
-                m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
-        }
+        ClimbUpdateLoop();
+        WallRunUpdateLoop();
     }
 
     void FixedUpdate()
@@ -148,7 +135,7 @@ public class PlayerController : MonoBehaviour
     void Inputs() {
 
         // Get Inputs from Joystick for Movement
-        vert_move   = Input.GetAxis("Vertical");
+        vert_move = Input.GetAxis("Vertical");
         hor_move = Input.GetAxis("Horizontal");
         v_look = Input.GetAxis("Vertical Look");
         h_look = Input.GetAxis("Horizontal Look");
@@ -170,9 +157,16 @@ public class PlayerController : MonoBehaviour
         if (jump_button && isGrounded) { Jump(); }
 
         if (jump_button && wallHitClimb) { Climb(); }
-        
+
+        if (jump_button && rightWallRun || leftWallRun) { WallRun(); }
+
         if (!isGrounded) BetterJump();
 
+        if (!jump_button && (leftWallRun || rightWallRun)) {
+            Camera.main.transform.localEulerAngles = Vector3.zero;
+            rb.useGravity = true;
+            wallRun_timer_countdown = false;
+        }
 
 
         if (duck_toggle && isGrounded) Slide();
@@ -195,6 +189,17 @@ public class PlayerController : MonoBehaviour
     void Movement(float vert, float hor) {
 
         if(CharacterState.character_activity == ActivityState.climb) { vert = Mathf.Clamp(vert, 0, 1); hor = 0; }
+
+        if (CharacterState.character_activity == ActivityState.wallrun) {
+            if (leftWallRun)
+            {
+                hor = Mathf.Clamp(hor, 0, 1);
+            }
+            else if (rightWallRun) {
+                hor = Mathf.Clamp(hor, -1, 0);
+            }
+        }
+
         //While Climbing don't take any inputs
         if (jump_button && wallHitClimb) { vert = Mathf.Clamp(vert, -1, 0); }
 
@@ -267,7 +272,7 @@ public class PlayerController : MonoBehaviour
     void Jump() {
         Debug.Log("Jump called");
 
-        if (!wallHitClimb && !jump_Called)
+        if (!wallHitClimb && !jump_Called && !leftWallRun && !rightWallRun)
         {
             rb.AddForce(parentTransform.up * m_jumpForce, ForceMode.Impulse);
             CharacterState.character_activity = ActivityState.jump;
@@ -286,8 +291,14 @@ public class PlayerController : MonoBehaviour
 
     void WallRun() {
         //Implement this here !!!!!!!!!!!
+        Debug.Log("WallRunning");
+        if(rightWallRun)
+            Camera.main.transform.localEulerAngles = new Vector3(0, 0, 10);
+        if (leftWallRun)
+            Camera.main.transform.localEulerAngles = new Vector3(0, 0, -10);
         CharacterState.character_activity = ActivityState.wallrun;
         rb.useGravity = false;
+        wallRun_timer_countdown = true;
     }
 
     #endregion
@@ -429,7 +440,6 @@ public class PlayerController : MonoBehaviour
         }
         else {
             wallHitClimb = false;
-            rb.useGravity = true;
             Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.forward) * 2, Color.white);
         }
     }
@@ -513,6 +523,50 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void ClimbUpdateLoop() {
+        if (climb_timer_countdown && climbDistance > 0)
+        {
+            climbDistance = HelperMethods.CountDown(climbDistance);
+            if (m_thirdPersonMode)
+                m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
+        }
+        else if (climbDistance < 0)
+        {
+            climb_timer_countdown = false;
+            rb.useGravity = true;
+        }
+
+        if (!climb_timer_countdown)
+        {
+            climbDistance = 2.0f;
+            if (m_thirdPersonMode)
+                m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
+        }
+    }
+
+    void WallRunUpdateLoop() {
+        if (wallRun_timer_countdown && WallRunDist > 0)
+        {
+
+            WallRunDist = HelperMethods.CountDown(WallRunDist);
+            if (m_thirdPersonMode)
+            {
+                //Insert here the Third person animation state Var
+            }
+        }
+        else if (WallRunDist < 0) {
+            wallRun_timer_countdown = false;
+            rb.useGravity = true;
+        }
+
+        if (!wallRun_timer_countdown) {
+            WallRunDist = 2.0f;
+            if (m_thirdPersonMode)
+            {
+                //Insert here the Third person animation state Var
+            }
+        }
+    }
     #endregion
 
     private void OnTriggerEnter(Collider other)
