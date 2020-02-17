@@ -80,7 +80,8 @@ public class PlayerController : MonoBehaviour
 
     //Bool Checks
     bool jump_Called = false;
-
+    bool climb_timer_countdown = false;
+    public float climbDistance = 2;
 
     #endregion
 
@@ -90,6 +91,24 @@ public class PlayerController : MonoBehaviour
         rb = GetComponentInParent<Rigidbody>();
         PopulateList(lookRotationInputs, 2);
         PopulateList(movementInputs, 2);
+    }
+
+    private void Update()
+    {
+        if (climb_timer_countdown && climbDistance > 0)
+        {
+            climbDistance = HelperMethods.CountDown(climbDistance);
+            m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
+        }
+        else if (climbDistance < 0) { 
+            climb_timer_countdown = false;
+            rb.useGravity = true;
+        }
+        else if (!climb_timer_countdown)
+        {
+            climbDistance = 2;
+            m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
+        }
     }
 
     void FixedUpdate()
@@ -121,7 +140,12 @@ public class PlayerController : MonoBehaviour
             RotateHorizontal(h_look);
 
         if (jump_button && isGrounded) { Jump(); }
+
+        if (jump_button && wallHitClimb) { Climb(); }
+        
         if (!isGrounded) BetterJump();
+
+
 
         //if (duck_toggle) Slide();
 
@@ -139,6 +163,7 @@ public class PlayerController : MonoBehaviour
     /// <param name="hor"></param>
     void Movement(float vert, float hor) {
 
+        if(CharacterState.character_activity == ActivityState.climb) { vert = 0; hor = 0; }
         //While Climbing don't take any inputs
         if (jump_button && wallHitClimb) { vert = Mathf.Clamp(vert, -1, 0); }
 
@@ -216,12 +241,14 @@ public class PlayerController : MonoBehaviour
             CharacterState.character_activity = ActivityState.jump;
             jump_Called = true;
         }
-        else if (wallHitClimb && !jump_Called)
-        {
-            rb.AddForce(parentTransform.up * m_jumpForce * m_ClimbHeight, ForceMode.Impulse);
-            jump_Called = true;
-        }
     }
+
+
+    void Climb() {
+        CharacterState.character_activity = ActivityState.climb;
+        jump_Called = true;
+    }
+
     #endregion
 
     #region Helper Functions
@@ -342,6 +369,7 @@ public class PlayerController : MonoBehaviour
             jump_Called = false;
             m_Animator.SetBool("jump", false);
             isGrounded = true;
+            m_Animator.SetBool("climbing", false);
         }
         if (CharacterLocState.instance.currentCharacterLocation == CharacterLocState.CharacterLocation.inAir) {
             isGrounded = false;
@@ -352,7 +380,7 @@ public class PlayerController : MonoBehaviour
 
     void RayCollisionClimb() {
 
-        if (Physics.Raycast(Camera.main.transform.position, transform.TransformDirection(Vector3.forward), out hit, 1, layerMask))
+        if (Physics.Raycast(Camera.main.transform.position, transform.TransformDirection(Vector3.forward), out hit, 2f, layerMask))
         {
             Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.red);
             wallHitClimb = true;
@@ -400,19 +428,64 @@ public class PlayerController : MonoBehaviour
             switch (state.character_activity) {
                 case ActivityState.jump:
                     m_Animator.SetBool("jump", true);
-                    if (state.character_movement == MovementType.walk){
+                    if (state.character_movement == MovementType.walk)
+                    {
                         m_Animator.SetBool("walking", true);
                         m_Animator.SetBool("running", false);
                     }
-                    else {
+                    else if (state.character_movement == MovementType.run)
+                    {
                         m_Animator.SetBool("walking", false);
                         m_Animator.SetBool("running", true);
                     }
+                    else {
+                        m_Animator.SetBool("walking", false);
+                        m_Animator.SetBool("running", false);
+                    }
+                    break;
+                case ActivityState.climb:
+                    rb.useGravity = false;
+                    climb_timer_countdown = true;
+                    m_Animator.SetBool("climbing", true);
+                    rb.transform.position += new Vector3(0, m_ClimbHeight * Time.deltaTime, 0);
                     break;
             }
         }
     }
 
     #endregion
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Transform parentTrans = GetComponentInParent<Transform>();
+        if (other.gameObject.CompareTag("WallEdge")) {
+            if (CharacterState.character_activity == ActivityState.climb)
+            {
+                m_Animator.SetTrigger("Reached Edge");
+                //rb.gameObject.GetComponent<BoxCollider>().enabled = false;
+            }
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.CompareTag("WallEdge"))
+        {
+            //rb.gameObject.GetComponent<BoxCollider>().enabled = true;
+            Debug.Log("Pulling up");
+            
+        }
+    }
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.gameObject.CompareTag("WallEdge"))
+        {
+            if (CharacterState.character_activity == ActivityState.climb)
+            {
+                rb.AddForce(Vector3.up * Time.deltaTime, ForceMode.Impulse);
+                rb.AddForce(Vector3.forward);
+            }
+        }
+    }
 
 }

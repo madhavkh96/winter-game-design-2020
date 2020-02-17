@@ -112,16 +112,16 @@ MonoBehaviour:
   m_WalkMultiplier: 7
   m_RunMultiplier: 12
   m_DuckMultiplier: 4
-  m_XLookSensitivity: 10
+  m_XLookSensitivity: 6
   m_YLookSensitivity: 10
-  m_jumpForce: 2
+  m_jumpForce: 1
   m_FallMultiplier: 2.5
   m_ClimbHeight: 2
   m_minimumXLook: -360
   m_maximumXLook: 360
   m_minimumYLook: -60
   m_maximumYLook: 60
-  m_Animator: {fileID: 0}
+  m_Animator: {fileID: 6991596139333700691}
   frameCounter: 10
   jump_button: 0
   isGrounded: 1
@@ -236,7 +236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9e5fd7c5988f4ef8a3c621076407709, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  respawnPoint: {x: -4.25, y: 1.175, z: 12.25}
+  respawnPoint: {x: 0.3, y: 1.1, z: 1.8}
 --- !u!65 &358766802853127812
 BoxCollider:
   m_ObjectHideFlags: 0

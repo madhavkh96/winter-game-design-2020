@@ -2,6 +2,7 @@
 {
     none,
     jump,
+    climb,
     duck,
     grapple,
     slide,
