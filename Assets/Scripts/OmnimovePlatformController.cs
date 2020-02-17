@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class OmnimovePlatformController : MonoBehaviour
 {
-    public float speed = 0.5f;
+    public float speed = 2.5f;
     Transform platform;
     public Vector3 Endpoint1;
     public Vector3 Endpoint2;
