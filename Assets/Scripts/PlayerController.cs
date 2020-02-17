@@ -59,6 +59,7 @@ public class PlayerController : MonoBehaviour
     bool run_button;
     bool duck_button;
     public bool jump_button;
+    public bool grapple_button;
 
     bool run_toggle;
     public bool duck_toggle;
@@ -70,6 +71,22 @@ public class PlayerController : MonoBehaviour
 
     float rotationX;
     float rotationY;
+
+    // Grapple
+    [SerializeField] private Transform debugHitPointTransform;
+    [SerializeField] private Transform hookshotTransform;
+    private Vector3 hookshotPosition;
+    public bool grapple_hit = false;
+    private float hookshotSize;
+
+    private Vector3 characterVelocityMomentum;
+    private GrappleState grapple_state;
+    private enum GrappleState
+    {
+        Normal,
+        HookshotThrown,
+        HookshotFlyingPlayer,
+    }
 
     //Make private once testing is completed
     public bool isGrounded = true;
@@ -100,6 +117,7 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        hookshotTransform.gameObject.SetActive(false);
         if (!m_thirdPersonMode)
         {
             GameObject.Find("Joints").SetActive(false);
@@ -120,22 +138,52 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (climb_timer_countdown && climbDistance > 0)
+        switch (grapple_state)
         {
-            climbDistance = HelperMethods.CountDown(climbDistance);
-            if (m_thirdPersonMode)
-                m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
-        }
-        else if (climbDistance < 0) { 
-            climb_timer_countdown = false;
-            rb.useGravity = true;
-        }
-        
-        if (!climb_timer_countdown)
-        {
-            climbDistance = 2.0f;
-            if (m_thirdPersonMode)
-                m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
+            default:
+            case GrappleState.Normal:
+                //Apply Momentum
+                //rb.velocity += characterVelocityMomentum;
+
+                //// Dampen Momentum
+                //if (characterVelocityMomentum.magnitude >= 0f)
+                //{
+                //    float momentumDrag = 3f;
+                //    characterVelocityMomentum -= characterVelocityMomentum * momentumDrag * Time.deltaTime;
+                //    if (characterVelocityMomentum.magnitude < .0f)
+                //    {
+                //        Debug.Log("Attempting to Drag Momentum");
+                //        characterVelocityMomentum = Vector3.zero;
+                //    }
+                //}
+
+                if (climb_timer_countdown && climbDistance > 0)
+                {
+                    climbDistance = HelperMethods.CountDown(climbDistance);
+                    if (m_thirdPersonMode)
+                        m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
+                }
+                else if (climbDistance < 0)
+                {
+                    climb_timer_countdown = false;
+                    rb.useGravity = true;
+                }
+
+                if (!climb_timer_countdown)
+                {
+                    climbDistance = 2.0f;
+                    if (m_thirdPersonMode)
+                        m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
+                }
+                HandleHookshotStart();
+                break;
+            case GrappleState.HookshotThrown:
+                HandleHookshotThrown();
+                break;
+            case GrappleState.HookshotFlyingPlayer:
+                HandleHookshotMovement();
+                break;
+
         }
     }
 
@@ -155,6 +203,7 @@ public class PlayerController : MonoBehaviour
         run_button = Input.GetButtonDown("Run");
         duck_button = Input.GetButtonDown("Duck");
         jump_button = Input.GetButton("Jump");
+        // grapple_button = Input.GetButton("Grapple");
 
         // Detects the state the player currently is.
         CharacterState = CurrentMovementStage();
@@ -167,11 +216,14 @@ public class PlayerController : MonoBehaviour
         if (!StillLooking(lookRotationInputs))
             RotateHorizontal(h_look);
 
+        // if (grapple_button) { HandleHookshotStart(); }
+
         if (jump_button && isGrounded) { Jump(); }
 
         if (jump_button && wallHitClimb) { Climb(); }
         
         if (!isGrounded) BetterJump();
+
 
 
 
@@ -274,6 +326,95 @@ public class PlayerController : MonoBehaviour
             jump_Called = true;
         }
     }
+
+
+    private void HandleHookshotStart()
+    {
+        if (Input.GetButton("Grapple"))
+        {
+            Debug.Log("Grapple called");
+            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit raycastHit) && !grapple_hit)
+            {
+                // Hit something
+                // debugHitPointTransform.position = raycastHit.point;
+                hookshotPosition = raycastHit.point;
+                // CharacterState.character_activity = ActivityState.grapple_flying;
+                hookshotSize = 0f;
+                hookshotTransform.gameObject.SetActive(true);
+                hookshotTransform.localScale = Vector3.zero;
+                grapple_state = GrappleState.HookshotThrown;
+                // grapple_hit = true;
+                // HandleHookshotMovement();
+                Debug.Log("Grapple target hit");
+            }
+        }
+
+    }
+
+    private void HandleHookshotThrown()
+    {
+        hookshotTransform.LookAt(hookshotPosition);
+
+        float hookshotThrowSpeed = 75f;
+        hookshotSize += hookshotThrowSpeed * Time.deltaTime;
+        hookshotTransform.localScale = new Vector3(1, 1, hookshotSize);
+
+        if (hookshotSize >= Vector3.Distance(transform.position, hookshotPosition))
+        {
+            grapple_state = GrappleState.HookshotFlyingPlayer;
+        }
+    }
+
+    // TODO: Try subtracting the x, y, z from the hookshotposition to the rayhit point
+    private void HandleHookshotMovement()
+    {
+        hookshotTransform.LookAt(hookshotPosition);
+        // Hookshot goes down in size based on position of player and hookshotPosition
+        hookshotTransform.localScale = new Vector3(1, 1, hookshotPosition.z - rb.transform.position.z);
+        Vector3 hookshotDir = (hookshotPosition - rb.transform.position).normalized;
+
+
+        float hookshotSpeedMin = 10f;
+        float hookshotSpeedMax = 40f;
+        float hookshotSpeed = Mathf.Clamp(Vector3.Distance(rb.transform.position, hookshotPosition), hookshotSpeedMin, hookshotSpeedMax);
+        float hookshotSpeedMultiplier = 3f;
+
+
+        //Move Character Controller
+        rb.transform.position += new Vector3(hookshotDir.x * Time.deltaTime * hookshotSpeed * hookshotSpeedMultiplier, hookshotDir.y * Time.deltaTime * hookshotSpeed * hookshotSpeedMultiplier, hookshotDir.z * Time.deltaTime * hookshotSpeed * hookshotSpeedMultiplier);
+
+        float reachedHookshotPositionDistance = 1f;
+        if (Vector3.Distance(rb.transform.position, hookshotPosition) < reachedHookshotPositionDistance)
+        {
+            //Reached hookshot position
+            // rb.AddForce(parentTransform.up * 5, ForceMode.Impulse);
+            StopHookShot();
+        }
+
+        if (Input.GetButton("Jump"))
+        {
+            //float momentumExtraSpeed = 1f;
+            //characterVelocityMomentum = hookshotDir * hookshotSpeed * momentumExtraSpeed;
+            StopHookShot();
+        }
+        // rb.MovePosition(hookshotDir * hookshotSpeed * Time.deltaTime);
+        // grapple_state = GrappleState.Normal;
+        // rb.transform.position += (hookshotDir * hookshotSpeed * Time.deltaTime);
+    }
+
+    private void StopHookShot ()
+    {
+        grapple_state = GrappleState.Normal;
+        hookshotTransform.gameObject.SetActive(false);
+    }
+
+    //private bool TestInputDownHookshot()
+    //{
+    //    if (grapple_button == Input.GetButton("Grapple"))
+    //    {
+    //        return grapple_hit;
+    //    }
+    //}
 
 
     void Climb() {
@@ -407,6 +548,7 @@ public class PlayerController : MonoBehaviour
     void SetCharacterLocation() {
         if (CharacterLocState.instance.currentCharacterLocation == CharacterLocState.CharacterLocation.grounded) {
             jump_Called = false;
+            grapple_hit = false;
             isGrounded = true;
         
             if (m_thirdPersonMode)
