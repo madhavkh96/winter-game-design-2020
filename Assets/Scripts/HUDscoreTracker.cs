@@ -15,6 +15,7 @@ public class HUDscoreTracker : MonoBehaviour
     void Start()
     {
         guiFontStyle.fontSize = 48;
+        guiFontStyle.normal.textColor = Color.green;
     }
 
     void OnGUI()
