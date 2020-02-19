@@ -5,9 +5,23 @@ using TMPro;
 
 public class HUDscoreTracker : MonoBehaviour
 {
-    private int score = 0;
+    internal int score = 0;
     private GUIStyle guiFontStyle = new GUIStyle();
     public TextMeshProUGUI coinText;
+
+    public static HUDscoreTracker instance = null;
+
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else {
+            Destroy(gameObject);
+        }
+    }
 
     public void addScore(int value)
     {
