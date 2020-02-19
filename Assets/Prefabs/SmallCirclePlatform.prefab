@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 6133579755593150858}
   - component: {fileID: 6671190838937666837}
   - component: {fileID: 6113387052937990739}
+  - component: {fileID: 47284743568167594}
   m_Layer: 0
-  m_Name: SmallCirclePlatformCylinder
-  m_TagString: Untagged
+  m_Name: SmallCirclePlatform
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -88,8 +89,21 @@ CapsuleCollider:
   m_GameObject: {fileID: 5920978588240070404}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.5000001
   m_Height: 2
   m_Direction: 1
+  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+--- !u!65 &47284743568167594
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5920978588240070404}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1.0000001, y: 2, z: 1.0000002}
   m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}

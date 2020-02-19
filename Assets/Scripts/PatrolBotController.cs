@@ -43,7 +43,7 @@ public class PatrolBotController : MonoBehaviour
             }
         }
         Vector3 heading = player.GetComponent<Transform>().position - patrolBot.position;
-        Debug.Log(heading.magnitude);
+        //Debug.Log(heading.magnitude);
         if (heading.magnitude <= engagementRange)
         {
             patrolBot.rotation = Quaternion.LookRotation(heading, Vector3.up);

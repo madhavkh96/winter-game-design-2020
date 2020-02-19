@@ -108,6 +108,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d75b8de5f705ee04fa49cf02a440ade5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_thirdPersonMode: 0
+  m_firstPersonPosition: {x: 0, y: 0, z: 0}
+  m_ThirdPersonPosition: {x: 0, y: 1.16, z: 2.51}
   m_screenShake: 1
   m_WalkMultiplier: 7
   m_RunMultiplier: 12
@@ -124,9 +127,17 @@ MonoBehaviour:
   m_Animator: {fileID: 6991596139333700691}
   frameCounter: 10
   jump_button: 0
+  grapple_button: 0
+  duck_toggle: 0
+  debugHitPointTransform: {fileID: 0}
+  hookshotTransform: {fileID: 6494180183771713365, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
+    type: 3}
+  grapple_hit: 0
   isGrounded: 1
   wallHitClimb: 1
-  climbDistance: 2
+  rightWallRun: 0
+  leftWallRun: 0
+  WallRunDist: 2
 --- !u!33 &369968435807643437
 MeshFilter:
   m_ObjectHideFlags: 0

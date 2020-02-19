@@ -56,12 +56,12 @@ public class PlayerController : MonoBehaviour
     float hor_move;
     float v_look;
     float h_look;
-    bool run_button;
+    float run_intensity;
     bool duck_button;
     public bool jump_button;
     public bool grapple_button;
 
-    bool run_toggle;
+    //bool run_toggle;
     public bool duck_toggle;
 
     Rigidbody rb;
@@ -186,7 +186,7 @@ public class PlayerController : MonoBehaviour
         hor_move = Input.GetAxis("Horizontal");
         v_look = Input.GetAxis("Vertical Look");
         h_look = Input.GetAxis("Horizontal Look");
-        run_button = Input.GetButtonDown("Run");
+        run_intensity = Input.GetAxis("Run");
         duck_button = Input.GetButtonDown("Duck");
         jump_button = Input.GetButton("Jump");
         // grapple_button = Input.GetButton("Grapple");
@@ -210,12 +210,21 @@ public class PlayerController : MonoBehaviour
 
         if (jump_button && rightWallRun || leftWallRun) { WallRun(); }
 
+        if (jump_button && !rightWallRun && !leftWallRun) {
+            rb.useGravity = true;
+            Camera.main.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, 0);
+        }
+
         if (!isGrounded) BetterJump();
 
-        if (!jump_button && (leftWallRun || rightWallRun)) {
-            Camera.main.transform.localEulerAngles = Vector3.zero;
+        if (!jump_button && !leftWallRun && !rightWallRun) {
+            Camera.main.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, 0);
             rb.useGravity = true;
             wallRun_timer_countdown = false;
+        }
+        
+        if (rightWallRun || leftWallRun) {
+            rb.velocity = new Vector3(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -20, 0), rb.velocity.z);
         }
 
 
@@ -224,6 +233,9 @@ public class PlayerController : MonoBehaviour
 
         RayCollisionClimb();
         RayCollisionWallJump();
+
+
+        
 
         if (m_thirdPersonMode) 
             SetAnimation(CharacterState);
@@ -263,7 +275,7 @@ public class PlayerController : MonoBehaviour
         { 
             moveDirection *= m_WalkMultiplier;
         }
-        else if (CharacterState.character_movement == MovementType.run) { moveDirection *= m_RunMultiplier; }
+        else if (CharacterState.character_movement == MovementType.run) { moveDirection *= (m_RunMultiplier * run_intensity); }
         else if (CharacterState.character_movement == MovementType.walk && CharacterState.character_activity == ActivityState.duck)
         {
             moveDirection *= m_DuckMultiplier;
@@ -430,15 +442,21 @@ public class PlayerController : MonoBehaviour
     }
 
     void WallRun() {
-        //Implement this here !!!!!!!!!!!
-        Debug.Log("WallRunning");
-        if(rightWallRun)
-            Camera.main.transform.localEulerAngles = new Vector3(0, 0, 10);
-        if (leftWallRun)
-            Camera.main.transform.localEulerAngles = new Vector3(0, 0, -10);
-        CharacterState.character_activity = ActivityState.wallrun;
-        rb.useGravity = false;
-        wallRun_timer_countdown = true;
+        //Debug.Log(rb.velocity.magnitude);
+        //if (rb.velocity.magnitude > 3)
+        //{
+            Debug.Log("WallRunning");
+            if (rightWallRun)
+                Camera.main.transform.localEulerAngles = new Vector3(0, 0, 10);
+            if (leftWallRun)
+                Camera.main.transform.localEulerAngles = new Vector3(0, 0, -10);
+            CharacterState.character_activity = ActivityState.wallrun;
+            rb.useGravity = false;
+            wallRun_timer_countdown = true;
+        //}
+        //else {
+        //    Debug.Log("Not enough velocity for wallrunning");
+        //}
     }
 
     #endregion
@@ -500,9 +518,8 @@ public class PlayerController : MonoBehaviour
         
 
         //Checks the value of the Run toggle to detect if player has pressed the Run Toggle for a state change.
-        if (run_button)
+        if (run_intensity > 0)
         {
-            run_toggle = true;
             duck_toggle = false;
         }
 
@@ -512,7 +529,7 @@ public class PlayerController : MonoBehaviour
 
         if (duck_toggle)
         {
-            run_toggle = false;
+            run_intensity = 0;
             parentTransform.localScale = duckHeight;
         }
         else {
@@ -521,15 +538,15 @@ public class PlayerController : MonoBehaviour
 
 
         //MovementType and ActivityState Detection Logic.
-        if (run_toggle && Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
+        if (run_intensity > 0&& Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
         {
             currentCharacterState = new CharacterState(MovementType.run, ActivityState.none);
             Debug.Log("<color=blue> Run, None</color>");
             return currentCharacterState;
         }
-        else if (run_toggle && Mathf.Abs(movementInputs[0]) <= 0.85f && Mathf.Abs(movementInputs[1]) <= 0.85f)
+        else if (run_intensity > 0 && Mathf.Abs(movementInputs[0]) <= 0.85f && Mathf.Abs(movementInputs[1]) <= 0.85f)
         {
-            run_toggle = false;
+            run_intensity = 0;
             Debug.Log("<color=green> Walk, None</color>");
             currentCharacterState = new CharacterState(MovementType.walk, ActivityState.none);
             return currentCharacterState;
@@ -560,7 +577,7 @@ public class PlayerController : MonoBehaviour
             jump_Called = false;
             grapple_hit = false;
             isGrounded = true;
-        
+
             if (m_thirdPersonMode)
             {
                 m_Animator.SetBool("jump", false);
