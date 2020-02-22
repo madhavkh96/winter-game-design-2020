@@ -40,6 +40,20 @@ public class PlayerController : MonoBehaviour
     [Range(1, 10)]
     public int m_ClimbHeight = 2;
 
+
+    [Header("Grapple Variables")]
+
+    [Range(15, 50)]
+    public int m_grappleRange = 20;
+
+
+    [Header("Reticle Color")]
+
+    public Color32 m_NormalColor;
+    public Color32 m_LockedColor;
+    public Color32 m_InteractingColor;
+
+
     [Header("Horizontal-Look Restraints")]
     public float m_minimumXLook = -360f;
     public float m_maximumXLook =  360f;
@@ -83,7 +97,8 @@ public class PlayerController : MonoBehaviour
     private GrappleState grapple_state;
     private enum GrappleState
     {
-        Normal,
+        Idle,
+        CanHit,
         HookshotThrown,
         HookshotFlyingPlayer,
     }
@@ -107,6 +122,7 @@ public class PlayerController : MonoBehaviour
     RaycastHit hit;
     RaycastHit rightHit;
     RaycastHit leftHit;
+    RaycastHit grappleHit;
 
     //Bool Checks
     bool jump_Called = false;
@@ -140,37 +156,8 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        switch (grapple_state)
-        {
-            default:
-            case GrappleState.Normal:
-                //Apply Momentum
-                //rb.velocity += characterVelocityMomentum;
-
-                //// Dampen Momentum
-                //if (characterVelocityMomentum.magnitude >= 0f)
-                //{
-                //    float momentumDrag = 3f;
-                //    characterVelocityMomentum -= characterVelocityMomentum * momentumDrag * Time.deltaTime;
-                //    if (characterVelocityMomentum.magnitude < .0f)
-                //    {
-                //        Debug.Log("Attempting to Drag Momentum");
-                //        characterVelocityMomentum = Vector3.zero;
-                //    }
-                //}
-
-                ClimbUpdateLoop();
-                WallRunUpdateLoop();
-                HandleHookshotStart();
-                break;
-            case GrappleState.HookshotThrown:
-                HandleHookshotThrown();
-                break;
-            case GrappleState.HookshotFlyingPlayer:
-                HandleHookshotMovement();
-                break;
-
-        }
+        ClimbUpdateLoop();
+        WallRunUpdateLoop();                
     }
 
     void FixedUpdate()
@@ -189,7 +176,7 @@ public class PlayerController : MonoBehaviour
         run_intensity = Input.GetAxis("Run");
         duck_button = Input.GetButtonDown("Duck");
         jump_button = Input.GetButton("Jump");
-        // grapple_button = Input.GetButton("Grapple");
+        grapple_button = Input.GetButton("Grapple");
 
         // Detects the state the player currently is.
         CharacterState = CurrentMovementStage();
@@ -204,37 +191,8 @@ public class PlayerController : MonoBehaviour
 
         // if (grapple_button) { HandleHookshotStart(); }
 
-        if (jump_button && isGrounded) { Jump(); }
 
-        if (jump_button && wallHitClimb) { Climb(); }
-
-        if (jump_button && rightWallRun || leftWallRun) { WallRun(); }
-
-        if (jump_button && !rightWallRun && !leftWallRun) {
-            rb.useGravity = true;
-            Camera.main.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, 0);
-        }
-
-        if (!isGrounded) BetterJump();
-
-        if (!jump_button && !leftWallRun && !rightWallRun) {
-            Camera.main.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, 0);
-            rb.useGravity = true;
-            wallRun_timer_countdown = false;
-        }
-        
-        if (rightWallRun || leftWallRun) {
-            rb.velocity = new Vector3(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -20, 0), rb.velocity.z);
-        }
-
-
-
-        if (duck_toggle && isGrounded) Slide();
-
-        RayCollisionClimb();
-        RayCollisionWallJump();
-
-
+        PlayerActions();
         
 
         if (m_thirdPersonMode) 
@@ -242,7 +200,48 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    #region Movement And Rotation
+    #region PlayerActions
+
+    void PlayerActions() {
+
+        RayCollisionClimb();
+        RayCollisionWallRun();
+        GrappleMovement();
+
+        if (jump_button && isGrounded) { Jump(); }
+
+        if (jump_button && wallHitClimb) { Climb(); }
+
+        if (jump_button && rightWallRun || leftWallRun) { WallRun(); }
+
+        if (jump_button && !rightWallRun && !leftWallRun)
+        {
+            rb.useGravity = true;
+            Camera.main.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, 0);
+        }
+
+        if (!isGrounded) BetterJump();
+
+        if (!jump_button && !leftWallRun && !rightWallRun)
+        {
+            Camera.main.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, 0);
+            rb.useGravity = true;
+            wallRun_timer_countdown = false;
+        }
+
+        if (rightWallRun || leftWallRun)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -20, 0), rb.velocity.z);
+        }
+
+        if (duck_toggle && isGrounded) Slide();
+
+    }
+
+    #endregion
+
+
+    #region Movement And Rotation    
 
     /// <summary>
     /// Moves the player in their local axes.
@@ -344,100 +343,13 @@ public class PlayerController : MonoBehaviour
     }
 
 
-    private void HandleHookshotStart()
-    {
-        if (Input.GetButton("Grapple"))
-        {
-            Debug.Log("Grapple called");
-            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit raycastHit) && !grapple_hit)
-            {
-                // Hit something
-                // debugHitPointTransform.position = raycastHit.point;
-                hookshotPosition = raycastHit.point;
-                // CharacterState.character_activity = ActivityState.grapple_flying;
-                hookshotSize = 0f;
-                hookshotTransform.gameObject.SetActive(true);
-                hookshotTransform.localScale = Vector3.zero;
-                grapple_state = GrappleState.HookshotThrown;
-                // grapple_hit = true;
-                // HandleHookshotMovement();
-                Debug.Log("Grapple target hit");
-            }
-        }
-
-    }
-
-    private void HandleHookshotThrown()
-    {
-        hookshotTransform.LookAt(hookshotPosition);
-
-        float hookshotThrowSpeed = 75f;
-        hookshotSize += hookshotThrowSpeed * Time.deltaTime;
-        hookshotTransform.localScale = new Vector3(1, 1, hookshotSize);
-
-        if (hookshotSize >= Vector3.Distance(transform.position, hookshotPosition))
-        {
-            grapple_state = GrappleState.HookshotFlyingPlayer;
-        }
-    }
-
-    // TODO: Try subtracting the x, y, z from the hookshotposition to the rayhit point
-    private void HandleHookshotMovement()
-    {
-        hookshotTransform.LookAt(hookshotPosition);
-        // Hookshot goes down in size based on position of player and hookshotPosition
-        hookshotTransform.localScale = new Vector3(1, 1, hookshotPosition.z - rb.transform.position.z);
-        Vector3 hookshotDir = (hookshotPosition - rb.transform.position).normalized;
-
-
-        float hookshotSpeedMin = 10f;
-        float hookshotSpeedMax = 40f;
-        float hookshotSpeed = Mathf.Clamp(Vector3.Distance(rb.transform.position, hookshotPosition), hookshotSpeedMin, hookshotSpeedMax);
-        float hookshotSpeedMultiplier = 3f;
-
-
-        //Move Character Controller
-        rb.transform.position += new Vector3(hookshotDir.x * Time.deltaTime * hookshotSpeed * hookshotSpeedMultiplier, hookshotDir.y * Time.deltaTime * hookshotSpeed * hookshotSpeedMultiplier, hookshotDir.z * Time.deltaTime * hookshotSpeed * hookshotSpeedMultiplier);
-
-        float reachedHookshotPositionDistance = 1f;
-        if (Vector3.Distance(rb.transform.position, hookshotPosition) < reachedHookshotPositionDistance)
-        {
-            //Reached hookshot position
-            // rb.AddForce(parentTransform.up * 5, ForceMode.Impulse);
-            StopHookShot();
-        }
-
-        if (Input.GetButton("Jump"))
-        {
-            //float momentumExtraSpeed = 1f;
-            //characterVelocityMomentum = hookshotDir * hookshotSpeed * momentumExtraSpeed;
-            StopHookShot();
-        }
-        // rb.MovePosition(hookshotDir * hookshotSpeed * Time.deltaTime);
-        // grapple_state = GrappleState.Normal;
-        // rb.transform.position += (hookshotDir * hookshotSpeed * Time.deltaTime);
-    }
-
-    private void StopHookShot ()
-    {
-        grapple_state = GrappleState.Normal;
-        hookshotTransform.gameObject.SetActive(false);
-    }
-
-    //private bool TestInputDownHookshot()
-    //{
-    //    if (grapple_button == Input.GetButton("Grapple"))
-    //    {
-    //        return grapple_hit;
-    //    }
-    //}
-
+   
 
     void Climb() {
         CharacterState.character_activity = ActivityState.climb;
         rb.useGravity = false;
         climb_timer_countdown = true;
-        rb.transform.position += new Vector3(0, m_ClimbHeight * Time.deltaTime, 0);
+        rb.MovePosition( new Vector3(rb.transform.position.x,rb.transform.position.y + m_ClimbHeight * Time.deltaTime, rb.transform.position.z));
         jump_Called = true;
     }
 
@@ -458,6 +370,115 @@ public class PlayerController : MonoBehaviour
         //    Debug.Log("Not enough velocity for wallrunning");
         //}
     }
+
+    private void HandleHookShotDetect()
+    {
+        if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out grappleHit, m_grappleRange))
+        {
+            Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.red);
+            GameManager.instance.m_ReticleImage.color = m_LockedColor;
+            if (grapple_state == GrappleState.Idle)
+            {
+                hookshotTransform.gameObject.SetActive(false);
+                grapple_state = GrappleState.CanHit;
+            }
+        }
+
+        else
+        {
+            Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.white);
+            grapple_state = GrappleState.Idle;
+            GameManager.instance.m_ReticleImage.color = m_NormalColor;
+        }
+    }
+
+    private void HandleHookshotStart()
+    {
+        hookshotPosition = grappleHit.point;
+        hookshotSize = 0f;
+        hookshotTransform.gameObject.SetActive(true);
+        hookshotTransform.localScale = Vector3.zero;
+        grapple_state = GrappleState.HookshotThrown;
+        Debug.Log("Grapple target hit");
+    }
+
+    private void HandleHookshotThrown()
+    {
+        hookshotTransform.LookAt(hookshotPosition);
+        GameManager.instance.m_ReticleImage.color = m_InteractingColor;
+        float hookshotThrowSpeed = 75f;
+        hookshotSize += hookshotThrowSpeed * Time.deltaTime;
+        hookshotTransform.localScale = new Vector3(1, 1, hookshotSize);
+
+        if (hookshotSize >= Vector3.Distance(transform.position, hookshotPosition))
+        {
+            grapple_state = GrappleState.HookshotFlyingPlayer;
+        }
+    }
+
+    #region Grapple
+    // TODO: Try subtracting the x, y, z from the hookshotposition to the rayhit point
+    private void HandleHookshotMovement()
+    {
+        hookshotTransform.LookAt(hookshotPosition);
+
+        // Hookshot goes down in size based on position of player and hookshotPosition
+        hookshotTransform.localScale = new Vector3(1, 1, Mathf.Abs(hookshotPosition.z - rb.transform.position.z));
+        Vector3 hookshotDir = (hookshotPosition - rb.transform.position).normalized;
+
+
+
+        float hookshotSpeedMin = 10f;
+        float hookshotSpeedMax = 40f;
+        float hookshotSpeed = Mathf.Clamp(Vector3.Distance(rb.transform.position, hookshotPosition), hookshotSpeedMin, hookshotSpeedMax);
+        float hookshotSpeedMultiplier = 3f;
+
+
+        //Move Character Controller
+
+        rb.MovePosition(new Vector3(rb.transform.position.x + hookshotDir.x * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier + rb.velocity.x, 
+                                    rb.transform.position.y + hookshotDir.y * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier, 
+                                    rb.transform.position.z + hookshotDir.z * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier + rb.velocity.z));
+
+        float reachedHookshotPositionDistance = 1f;
+
+        if (Vector3.Distance(rb.transform.position, hookshotPosition) < reachedHookshotPositionDistance)
+        {
+            //Reached hookshot position
+            rb.AddForce(rb.velocity * 5, ForceMode.Impulse);
+            StopHookShot();
+            grapple_state = GrappleState.Idle;
+            Debug.Log("<color=blue>" + rb.velocity + "</color>");
+        }
+
+        if (Input.GetButton("Jump"))
+        {
+            //float momentumExtraSpeed = 1f;
+            //characterVelocityMomentum = hookshotDir * hookshotSpeed * momentumExtraSpeed;
+            StopHookShot();
+            grapple_state = GrappleState.Idle;
+        }
+        // rb.MovePosition(hookshotDir * hookshotSpeed * Time.deltaTime);
+        // grapple_state = GrappleState.Normal;
+        // rb.transform.position += (hookshotDir * hookshotSpeed * Time.deltaTime);
+    }
+
+    private void StopHookShot()
+    {
+        Debug.Log(rb.velocity);
+        grapple_state = GrappleState.Idle;
+        hookshotTransform.gameObject.SetActive(false);
+    }
+
+    //private bool TestInputDownHookshot()
+    //{
+    //    if (grapple_button == Input.GetButton("Grapple"))
+    //    {
+    //        return grapple_hit;
+    //    }
+    //}
+
+    #endregion
 
     #endregion
 
@@ -536,7 +557,11 @@ public class PlayerController : MonoBehaviour
             parentTransform.localScale = normalHeight;
         }
 
-
+        if (grapple_button) {
+            currentCharacterState = new CharacterState(CharacterState.character_movement, ActivityState.grappling);
+            return currentCharacterState;
+        }
+    
         //MovementType and ActivityState Detection Logic.
         if (run_intensity > 0&& Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
         {
@@ -603,7 +628,7 @@ public class PlayerController : MonoBehaviour
     }
 
 
-    void RayCollisionWallJump() {
+    void RayCollisionWallRun() {
         if (Physics.Raycast(feet.position, transform.TransformDirection(Vector3.right), out rightHit, 1f, layerMask)) {
             Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right), Color.red);
             rightWallRun = true;
@@ -621,6 +646,34 @@ public class PlayerController : MonoBehaviour
         else {
             Debug.DrawRay(feet.position, transform.TransformDirection(-Vector3.right), Color.white);
             leftWallRun = false;
+        }
+    }
+
+
+    void GrappleMovement() {
+
+
+        Debug.Log(grapple_state);
+
+        HandleHookShotDetect();
+
+        switch (grapple_state)
+        {
+            case GrappleState.CanHit:
+                if (CharacterState.character_activity == ActivityState.grappling)
+                {
+                    HandleHookshotStart();
+                }
+                break;
+            case GrappleState.HookshotThrown:
+                HandleHookshotThrown();
+                break;
+            case GrappleState.HookshotFlyingPlayer:
+                HandleHookshotMovement();
+                break;
+            default:
+                Debug.Log("Can't hit");
+                break;
         }
     }
 
@@ -655,6 +708,7 @@ public class PlayerController : MonoBehaviour
                     break;
             }
         }
+
         else {
             switch (state.character_activity) {
                 case ActivityState.jump:
@@ -701,7 +755,7 @@ public class PlayerController : MonoBehaviour
                 m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
         }
     }
-
+          
     void WallRunUpdateLoop() {
         if (wallRun_timer_countdown && WallRunDist > 0)
         {

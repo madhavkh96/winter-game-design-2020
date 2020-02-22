@@ -8,9 +8,11 @@ public class PlatformJumpHack : MonoBehaviour
     {
         if (other.gameObject.tag == "Player")
         {
+            Debug.Log(other.gameObject.GetComponent<Rigidbody>().velocity.y > 0);
+
             if (other.gameObject.GetComponent<Rigidbody>().velocity.y > 0)
             {
-                Physics.IgnoreCollision(this.gameObject.transform.parent.GetComponent<BoxCollider>(), other.gameObject.GetComponent<BoxCollider>(), true);
+                Physics.IgnoreCollision(this.gameObject.transform.parent.transform.parent.GetComponent<BoxCollider>(), other.gameObject.GetComponent<BoxCollider>(), true);
             }
         }
     }
@@ -18,7 +20,7 @@ public class PlatformJumpHack : MonoBehaviour
     private void OnTriggerExit(Collider other)
     {
         if (other.gameObject.tag == "Player") {
-            Physics.IgnoreCollision(this.gameObject.transform.parent.GetComponent<BoxCollider>(), other.gameObject.GetComponent<BoxCollider>(), false);
+            Physics.IgnoreCollision(this.gameObject.transform.parent.transform.parent.GetComponent<BoxCollider>(), other.gameObject.GetComponent<BoxCollider>(), false);
         }
     }
 }

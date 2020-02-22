@@ -4,7 +4,7 @@
     jump,
     climb,
     duck,
-    grapple_flying,
+    grappling,
     slide,
     wallrun,
 }
