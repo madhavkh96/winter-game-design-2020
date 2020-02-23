@@ -4,6 +4,13 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+
+    [Header("Camera Configs")]
+    public bool m_thirdPersonMode = false;
+    public Vector3 m_firstPersonPosition;
+    public Vector3 m_ThirdPersonPosition;
+    
+
     #region Variables
     [Header("Movement Customizations")]
     [Range(1f, 5f)]
@@ -33,6 +40,20 @@ public class PlayerController : MonoBehaviour
     [Range(1, 10)]
     public int m_ClimbHeight = 2;
 
+
+    [Header("Grapple Variables")]
+
+    [Range(15, 50)]
+    public int m_grappleRange = 20;
+
+
+    [Header("Reticle Color")]
+
+    public Color32 m_NormalColor;
+    public Color32 m_LockedColor;
+    public Color32 m_InteractingColor;
+
+
     [Header("Horizontal-Look Restraints")]
     public float m_minimumXLook = -360f;
     public float m_maximumXLook =  360f;
@@ -49,12 +70,13 @@ public class PlayerController : MonoBehaviour
     float hor_move;
     float v_look;
     float h_look;
-    bool run_button;
+    float run_intensity;
     bool duck_button;
     public bool jump_button;
+    public bool grapple_button;
 
-    bool run_toggle;
-    bool duck_toggle;
+    //bool run_toggle;
+    public bool duck_toggle;
 
     Rigidbody rb;
     Transform parentTransform;
@@ -64,8 +86,29 @@ public class PlayerController : MonoBehaviour
     float rotationX;
     float rotationY;
 
+    // Grapple
+    //[SerializeField] private Transform debugHitPointTransform;
+    [SerializeField] private Transform hookshotTransform;
+
+    private Vector3 hookshotPosition;
+    public bool grapple_hit = false;
+    private float hookshotSize;
+
+    private Vector3 characterVelocityMomentum;
+    private GrappleState grapple_state;
+    private enum GrappleState
+    {
+        Idle,
+        CanHit,
+        HookshotThrown,
+        HookshotFlyingPlayer,
+    }
+
+    //Make private once testing is completed
     public bool isGrounded = true;
-    public bool wallHitClimb = true;
+    public bool wallHitClimb = false;
+    public bool rightWallRun = false;
+    public bool leftWallRun = false;
 
     List<float> lookRotationInputs = new List<float>();
     List<float> movementInputs = new List<float>();
@@ -73,23 +116,51 @@ public class PlayerController : MonoBehaviour
     Vector3 moveDirection;
     Vector3 duckHeight = new Vector3(1, 0.5f, 1);
     Vector3 normalHeight = new Vector3(1, 1, 1);
+    Transform feet;
 
     int layerMask = 1 << 8;
-
+    
     RaycastHit hit;
+    RaycastHit rightHit;
+    RaycastHit leftHit;
+    RaycastHit grappleHit;
+    LineRenderer grappleGraphic;
+
 
     //Bool Checks
     bool jump_Called = false;
-
+    bool climb_timer_countdown = false;
+    float climbDistance = 2;
+    bool wallRun_timer_countdown = false;
+    public float WallRunDist = 2;
 
     #endregion
 
+    private void Awake()
+    {
+        hookshotTransform.gameObject.SetActive(false);
+        if (!m_thirdPersonMode)
+        {
+            GameObject.Find("Joints").SetActive(false);
+            Camera.main.transform.localPosition = m_firstPersonPosition;
+        }
+        else {
+            Camera.main.transform.localPosition = m_ThirdPersonPosition;
+        }
+    }
     private void Start()
     {
         parentTransform = GetComponentInParent<Transform>();
+        feet = GameObject.Find("Player Feet").GetComponent<Transform>();
         rb = GetComponentInParent<Rigidbody>();
         PopulateList(lookRotationInputs, 2);
         PopulateList(movementInputs, 2);
+    }
+
+    private void Update()
+    {
+        ClimbUpdateLoop();
+        WallRunUpdateLoop();                
     }
 
     void FixedUpdate()
@@ -101,13 +172,14 @@ public class PlayerController : MonoBehaviour
     void Inputs() {
 
         // Get Inputs from Joystick for Movement
-        vert_move   = Input.GetAxis("Vertical");
+        vert_move = Input.GetAxis("Vertical");
         hor_move = Input.GetAxis("Horizontal");
         v_look = Input.GetAxis("Vertical Look");
         h_look = Input.GetAxis("Horizontal Look");
-        run_button = Input.GetButtonDown("Run");
-        duck_button = Input.GetButtonDown("Duck");
+        run_intensity = Input.GetAxis("Run");
+        duck_button = Input.GetButton("Duck");
         jump_button = Input.GetButton("Jump");
+        grapple_button = Input.GetButton("Grapple");
 
         // Detects the state the player currently is.
         CharacterState = CurrentMovementStage();
@@ -120,17 +192,59 @@ public class PlayerController : MonoBehaviour
         if (!StillLooking(lookRotationInputs))
             RotateHorizontal(h_look);
 
-        if (jump_button && isGrounded) { Jump(); }
-        if (!isGrounded) BetterJump();
+        // if (grapple_button) { HandleHookshotStart(); }
 
-        //if (duck_toggle) Slide();
 
-        RayCollisionClimb();
-        SetAnimation(CharacterState);
+        PlayerActions();
+        
+
+        if (m_thirdPersonMode) 
+            SetAnimation(CharacterState);
 
     }
 
-    #region Movement And Rotation
+    #region PlayerActions
+
+    void PlayerActions() {
+
+        RayCollisionClimb();
+        RayCollisionWallRun();
+        GrappleMovement();
+
+        if (jump_button && isGrounded) { Jump(); }
+
+        if (jump_button && wallHitClimb) { Climb(); }
+
+        if (jump_button && rightWallRun || leftWallRun) { WallRun(); }
+
+        if (jump_button && !rightWallRun && !leftWallRun)
+        {
+            rb.useGravity = true;
+            Camera.main.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, 0);
+        }
+
+        if (!isGrounded) BetterJump();
+
+        if (!jump_button && !leftWallRun && !rightWallRun)
+        {
+            Camera.main.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, 0);
+            rb.useGravity = true;
+            wallRun_timer_countdown = false;
+        }
+
+        if (rightWallRun || leftWallRun)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -20, 0), rb.velocity.z);
+        }
+
+        if (duck_toggle && isGrounded) Slide();
+
+    }
+
+    #endregion
+
+
+    #region Movement And Rotation    
 
     /// <summary>
     /// Moves the player in their local axes.
@@ -138,6 +252,18 @@ public class PlayerController : MonoBehaviour
     /// <param name="vert"></param>
     /// <param name="hor"></param>
     void Movement(float vert, float hor) {
+
+        if(CharacterState.character_activity == ActivityState.climb) { vert = Mathf.Clamp(vert, 0, 1); hor = 0; }
+
+        if (CharacterState.character_activity == ActivityState.wallrun) {
+            if (leftWallRun)
+            {
+                hor = Mathf.Clamp(hor, 0, 1);
+            }
+            else if (rightWallRun) {
+                hor = Mathf.Clamp(hor, -1, 0);
+            }
+        }
 
         //While Climbing don't take any inputs
         if (jump_button && wallHitClimb) { vert = Mathf.Clamp(vert, -1, 0); }
@@ -151,8 +277,9 @@ public class PlayerController : MonoBehaviour
         { 
             moveDirection *= m_WalkMultiplier;
         }
-        else if (CharacterState.character_movement == MovementType.run) { moveDirection *= m_RunMultiplier; }
-        else if (CharacterState.character_movement == MovementType.walk && CharacterState.character_activity == ActivityState.duck) 
+        else if (CharacterState.character_movement == MovementType.run) { moveDirection *= (m_RunMultiplier * run_intensity); }
+
+        else if (CharacterState.character_movement == MovementType.walk && CharacterState.character_activity == ActivityState.duck)
         {
             moveDirection *= m_DuckMultiplier;
         }
@@ -204,24 +331,154 @@ public class PlayerController : MonoBehaviour
 
 
     void Slide() {
+        Debug.Log("Slide Called");
         rb.AddForce(moveDirection * rb.velocity.magnitude, ForceMode.Impulse);   
     }
 
     void Jump() {
-        Debug.Log("Jump called");
 
-        if (!wallHitClimb && !jump_Called)
+        if (!wallHitClimb && !jump_Called && !leftWallRun && !rightWallRun)
         {
             rb.AddForce(parentTransform.up * m_jumpForce, ForceMode.Impulse);
             CharacterState.character_activity = ActivityState.jump;
             jump_Called = true;
         }
-        else if (wallHitClimb && !jump_Called)
+    }
+
+
+   
+
+    void Climb() {
+        CharacterState.character_activity = ActivityState.climb;
+        rb.useGravity = false;
+        climb_timer_countdown = true;
+        rb.MovePosition( new Vector3(rb.transform.position.x, rb.transform.position.y + m_ClimbHeight * Time.deltaTime, rb.transform.position.z));
+        jump_Called = true;
+    }
+
+    void WallRun() {
+        Debug.Log("WallRunning");
+        if (rightWallRun)
+            Camera.main.transform.localEulerAngles = new Vector3(0, 0, 10);
+        if (leftWallRun)
+            Camera.main.transform.localEulerAngles = new Vector3(0, 0, -10);
+        CharacterState.character_activity = ActivityState.wallrun;
+        rb.useGravity = false;
+        wallRun_timer_countdown = true;
+    }
+
+    private void HandleHookShotDetect()
+    {
+        if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out grappleHit, m_grappleRange))
         {
-            rb.AddForce(parentTransform.up * m_jumpForce * m_ClimbHeight, ForceMode.Impulse);
-            jump_Called = true;
+            Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.red);
+            GameManager.instance.m_ReticleImage.color = m_LockedColor;
+            if (grapple_state == GrappleState.Idle)
+            {
+                hookshotTransform.gameObject.SetActive(false);
+                grapple_state = GrappleState.CanHit;
+            }
+        }
+
+        else
+        {
+            Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.white);
+            grapple_state = GrappleState.Idle;
+            GameManager.instance.m_ReticleImage.color = m_NormalColor;
         }
     }
+
+    private void HandleHookshotStart()
+    {
+        hookshotPosition = grappleHit.point;
+        hookshotSize = 0f;
+        hookshotTransform.gameObject.SetActive(true);
+        hookshotTransform.localScale = Vector3.zero;
+        grapple_state = GrappleState.HookshotThrown;
+        Debug.Log("Grapple target hit");
+    }
+
+    private void HandleHookshotThrown()
+    {
+        hookshotTransform.LookAt(hookshotPosition);
+        GameManager.instance.m_ReticleImage.color = m_InteractingColor;
+        float hookshotThrowSpeed = 75f;
+        hookshotSize += hookshotThrowSpeed * Time.deltaTime;
+        hookshotTransform.localScale = new Vector3(1, 1, hookshotSize);
+
+        grappleGraphic = hookshotTransform.gameObject.GetComponentInChildren<LineRenderer>();
+        grappleGraphic.SetPosition(0, feet.position);
+        grappleGraphic.SetPosition(1, hookshotPosition);
+
+        if (hookshotSize >= Vector3.Distance(transform.position, hookshotPosition))
+        {
+            grapple_state = GrappleState.HookshotFlyingPlayer;
+        }
+    }
+
+    #region Grapple
+    // TODO: Try subtracting the x, y, z from the hookshotposition to the rayhit point
+    private void HandleHookshotMovement()
+    {
+        hookshotTransform.LookAt(hookshotPosition);
+
+        // Hookshot goes down in size based on position of player and hookshotPosition
+        //hookshotTransform.localScale = new Vector3(1, 1, Mathf.Abs(hookshotPosition.z - rb.transform.position.z));
+        grappleGraphic.SetPosition(0, feet.position);
+        Vector3 hookshotDir = (hookshotPosition - rb.transform.position).normalized;
+
+
+
+        float hookshotSpeedMin = 10f;
+        float hookshotSpeedMax = 40f;
+        float hookshotSpeed = Mathf.Clamp(Vector3.Distance(rb.transform.position, hookshotPosition), hookshotSpeedMin, hookshotSpeedMax);
+        float hookshotSpeedMultiplier = 3f;
+
+
+        //Move Character Controller
+
+        //rb.MovePosition(new Vector3(rb.transform.position.x + hookshotDir.x * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier + rb.velocity.x, 
+        //                            rb.transform.position.y + hookshotDir.y * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier, 
+        //                            rb.transform.position.z + hookshotDir.z * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier + rb.velocity.z));
+
+        rb.AddForce(new Vector3( hookshotDir.x * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier,
+                                 hookshotDir.y * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier,
+                                 hookshotDir.z * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier), ForceMode.VelocityChange);
+
+        float reachedHookshotPositionDistance = 1f;
+
+        if (Vector3.Distance(feet.position, hookshotPosition) < reachedHookshotPositionDistance)
+        {
+            //Reached hookshot position
+            rb.AddForce(rb.velocity, ForceMode.Impulse);
+            StopHookShot();
+            grapple_state = GrappleState.Idle;
+        }
+
+        if (Input.GetButton("Jump"))
+        {
+            StopHookShot();
+            grapple_state = GrappleState.Idle;
+        }
+    }
+
+    private void StopHookShot()
+    {
+        Debug.Log(rb.velocity);
+        grapple_state = GrappleState.Idle;
+        hookshotTransform.gameObject.SetActive(false);
+    }
+
+    //private bool TestInputDownHookshot()
+    //{
+    //    if (grapple_button == Input.GetButton("Grapple"))
+    //    {
+    //        return grapple_hit;
+    //    }
+    //}
+
+    #endregion
+
     #endregion
 
     #region Helper Functions
@@ -281,36 +538,40 @@ public class PlayerController : MonoBehaviour
         
 
         //Checks the value of the Run toggle to detect if player has pressed the Run Toggle for a state change.
-        if (run_button)
+        if (run_intensity > 0 && !duck_button)
         {
-            run_toggle = true;
-            duck_toggle = false;
+            duck_button = false;
         }
 
-        if (duck_button) {
-            duck_toggle = !duck_toggle;
-        }
+        //if (duck_button) {
+        //    duck_toggle = !duck_toggle;
+        //}
 
-        if (duck_toggle)
+        if (duck_button)
         {
-            run_toggle = false;
-            parentTransform.localScale = duckHeight;
+            Debug.Log("DUCK");
+            //run_intensity = 0;
+            parentTransform.parent.transform.localScale = duckHeight;
         }
         else {
-            parentTransform.localScale = normalHeight;
+            parentTransform.parent.transform.localScale = normalHeight;
         }
 
-
+        if (grapple_button) {
+            currentCharacterState = new CharacterState(CharacterState.character_movement, ActivityState.grappling);
+            return currentCharacterState;
+        }
+    
         //MovementType and ActivityState Detection Logic.
-        if (run_toggle && Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
+        if (run_intensity > 0&& Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
         {
             currentCharacterState = new CharacterState(MovementType.run, ActivityState.none);
             Debug.Log("<color=blue> Run, None</color>");
             return currentCharacterState;
         }
-        else if (run_toggle && Mathf.Abs(movementInputs[0]) <= 0.85f && Mathf.Abs(movementInputs[1]) <= 0.85f)
+        else if (run_intensity > 0 && Mathf.Abs(movementInputs[0]) <= 0.85f && Mathf.Abs(movementInputs[1]) <= 0.85f)
         {
-            run_toggle = false;
+            run_intensity = 0;
             Debug.Log("<color=green> Walk, None</color>");
             currentCharacterState = new CharacterState(MovementType.walk, ActivityState.none);
             return currentCharacterState;
@@ -337,33 +598,85 @@ public class PlayerController : MonoBehaviour
     }
 
     void SetCharacterLocation() {
-
         if (CharacterLocState.instance.currentCharacterLocation == CharacterLocState.CharacterLocation.grounded) {
             jump_Called = false;
-            m_Animator.SetBool("jump", false);
+            grapple_hit = false;
             isGrounded = true;
+
+            if (m_thirdPersonMode)
+            {
+                m_Animator.SetBool("jump", false);
+                m_Animator.SetBool("climbing", false);
+            }
         }
         if (CharacterLocState.instance.currentCharacterLocation == CharacterLocState.CharacterLocation.inAir) {
             isGrounded = false;
         }
-    
     }
 
 
     void RayCollisionClimb() {
-
-        if (Physics.Raycast(Camera.main.transform.position, transform.TransformDirection(Vector3.forward), out hit, 1, layerMask))
+        if (Physics.Raycast(feet.position, transform.TransformDirection(Vector3.forward), out hit, 1f, layerMask))
         {
-            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.red);
+            Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.red);
             wallHitClimb = true;
         }
         else {
             wallHitClimb = false;
-            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * 2, Color.white);
+            Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.forward) * 2, Color.white);
         }
-        
     }
 
+
+    void RayCollisionWallRun() {
+        if (Physics.Raycast(feet.position, transform.TransformDirection(Vector3.right), out rightHit, 1f, layerMask)) {
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right), Color.red);
+            rightWallRun = true;
+        }
+        else {
+            Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.right), Color.white);           
+            rightWallRun = false;
+        }
+
+        if (Physics.Raycast(feet.position, transform.TransformDirection(-Vector3.right), out leftHit, 1f, layerMask))
+        {
+            Debug.DrawRay(transform.position, transform.TransformDirection(-Vector3.right), Color.red);
+            leftWallRun = true;
+        }
+        else {
+            Debug.DrawRay(feet.position, transform.TransformDirection(-Vector3.right), Color.white);
+            leftWallRun = false;
+        }
+    }
+
+
+    void GrappleMovement() {
+
+
+        Debug.Log(grapple_state);
+
+        HandleHookShotDetect();
+
+        switch (grapple_state)
+        {
+            case GrappleState.CanHit:
+                if (CharacterState.character_activity == ActivityState.grappling)
+                {
+                    HandleHookshotStart();
+                }
+                break;
+            case GrappleState.HookshotThrown:
+                HandleHookshotThrown();
+                break;
+            case GrappleState.HookshotFlyingPlayer:
+                HandleHookshotMovement();
+                break;
+            default:
+                Debug.Log("Can't hit");
+                hookshotTransform.gameObject.SetActive(false);
+                break;
+        }
+    }
 
     void SetAnimation(CharacterState state) {
         //Always updating Falling State for fall Animation
@@ -396,23 +709,87 @@ public class PlayerController : MonoBehaviour
                     break;
             }
         }
+
         else {
             switch (state.character_activity) {
                 case ActivityState.jump:
                     m_Animator.SetBool("jump", true);
-                    if (state.character_movement == MovementType.walk){
+                    if (state.character_movement == MovementType.walk)
+                    {
                         m_Animator.SetBool("walking", true);
                         m_Animator.SetBool("running", false);
                     }
-                    else {
+                    else if (state.character_movement == MovementType.run)
+                    {
                         m_Animator.SetBool("walking", false);
                         m_Animator.SetBool("running", true);
                     }
+                    else {
+                        m_Animator.SetBool("walking", false);
+                        m_Animator.SetBool("running", false);
+                    }
+                    break;
+                case ActivityState.climb:
+                    m_Animator.SetBool("climbing", true);
                     break;
             }
         }
     }
 
+    void ClimbUpdateLoop() {
+        if (climb_timer_countdown && climbDistance > 0)
+        {
+            climbDistance = HelperMethods.CountDown(climbDistance);
+            if (m_thirdPersonMode)
+                m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
+        }
+        else if (climbDistance < 0)
+        {
+            climb_timer_countdown = false;
+            rb.useGravity = true;
+        }
+
+        if (!climb_timer_countdown)
+        {
+            climbDistance = 2.0f;
+            if (m_thirdPersonMode)
+                m_Animator.SetFloat("ClimbTimeLeft", climbDistance);
+        }
+    }
+          
+    void WallRunUpdateLoop() {
+        if (wallRun_timer_countdown && WallRunDist > 0)
+        {
+
+            WallRunDist = HelperMethods.CountDown(WallRunDist);
+            if (m_thirdPersonMode)
+            {
+                //Insert here the Third person animation state Var
+            }
+        }
+        else if (WallRunDist < 0) {
+            wallRun_timer_countdown = false;
+            rb.useGravity = true;
+        }
+
+        if (!wallRun_timer_countdown) {
+            WallRunDist = 2.0f;
+            if (m_thirdPersonMode)
+            {
+                //Insert here the Third person animation state Var
+            }
+        }
+    }
     #endregion
 
+    private void OnTriggerEnter(Collider other)
+    {
+        Transform parentTrans = GetComponentInParent<Transform>();
+        if (other.gameObject.CompareTag("WallEdge")) {
+            if (CharacterState.character_activity == ActivityState.climb)
+            {
+                m_Animator.SetTrigger("Reached Edge");
+            }
+        }
+    }
 }

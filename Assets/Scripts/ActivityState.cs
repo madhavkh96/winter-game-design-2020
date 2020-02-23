@@ -2,8 +2,9 @@
 {
     none,
     jump,
+    climb,
     duck,
-    grapple,
+    grappling,
     slide,
     wallrun,
 }
