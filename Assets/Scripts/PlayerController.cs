@@ -87,8 +87,9 @@ public class PlayerController : MonoBehaviour
     float rotationY;
 
     // Grapple
-    [SerializeField] private Transform debugHitPointTransform;
+    //[SerializeField] private Transform debugHitPointTransform;
     [SerializeField] private Transform hookshotTransform;
+
     private Vector3 hookshotPosition;
     public bool grapple_hit = false;
     private float hookshotSize;
@@ -118,11 +119,13 @@ public class PlayerController : MonoBehaviour
     Transform feet;
 
     int layerMask = 1 << 8;
-
+    
     RaycastHit hit;
     RaycastHit rightHit;
     RaycastHit leftHit;
     RaycastHit grappleHit;
+    LineRenderer grappleGraphic;
+
 
     //Bool Checks
     bool jump_Called = false;
@@ -174,7 +177,7 @@ public class PlayerController : MonoBehaviour
         v_look = Input.GetAxis("Vertical Look");
         h_look = Input.GetAxis("Horizontal Look");
         run_intensity = Input.GetAxis("Run");
-        duck_button = Input.GetButtonDown("Duck");
+        duck_button = Input.GetButton("Duck");
         jump_button = Input.GetButton("Jump");
         grapple_button = Input.GetButton("Grapple");
 
@@ -275,6 +278,7 @@ public class PlayerController : MonoBehaviour
             moveDirection *= m_WalkMultiplier;
         }
         else if (CharacterState.character_movement == MovementType.run) { moveDirection *= (m_RunMultiplier * run_intensity); }
+
         else if (CharacterState.character_movement == MovementType.walk && CharacterState.character_activity == ActivityState.duck)
         {
             moveDirection *= m_DuckMultiplier;
@@ -332,7 +336,6 @@ public class PlayerController : MonoBehaviour
     }
 
     void Jump() {
-        Debug.Log("Jump called");
 
         if (!wallHitClimb && !jump_Called && !leftWallRun && !rightWallRun)
         {
@@ -349,26 +352,19 @@ public class PlayerController : MonoBehaviour
         CharacterState.character_activity = ActivityState.climb;
         rb.useGravity = false;
         climb_timer_countdown = true;
-        rb.MovePosition( new Vector3(rb.transform.position.x,rb.transform.position.y + m_ClimbHeight * Time.deltaTime, rb.transform.position.z));
+        rb.MovePosition( new Vector3(rb.transform.position.x, rb.transform.position.y + m_ClimbHeight * Time.deltaTime, rb.transform.position.z));
         jump_Called = true;
     }
 
     void WallRun() {
-        //Debug.Log(rb.velocity.magnitude);
-        //if (rb.velocity.magnitude > 3)
-        //{
-            Debug.Log("WallRunning");
-            if (rightWallRun)
-                Camera.main.transform.localEulerAngles = new Vector3(0, 0, 10);
-            if (leftWallRun)
-                Camera.main.transform.localEulerAngles = new Vector3(0, 0, -10);
-            CharacterState.character_activity = ActivityState.wallrun;
-            rb.useGravity = false;
-            wallRun_timer_countdown = true;
-        //}
-        //else {
-        //    Debug.Log("Not enough velocity for wallrunning");
-        //}
+        Debug.Log("WallRunning");
+        if (rightWallRun)
+            Camera.main.transform.localEulerAngles = new Vector3(0, 0, 10);
+        if (leftWallRun)
+            Camera.main.transform.localEulerAngles = new Vector3(0, 0, -10);
+        CharacterState.character_activity = ActivityState.wallrun;
+        rb.useGravity = false;
+        wallRun_timer_countdown = true;
     }
 
     private void HandleHookShotDetect()
@@ -410,6 +406,10 @@ public class PlayerController : MonoBehaviour
         hookshotSize += hookshotThrowSpeed * Time.deltaTime;
         hookshotTransform.localScale = new Vector3(1, 1, hookshotSize);
 
+        grappleGraphic = hookshotTransform.gameObject.GetComponentInChildren<LineRenderer>();
+        grappleGraphic.SetPosition(0, feet.position);
+        grappleGraphic.SetPosition(1, hookshotPosition);
+
         if (hookshotSize >= Vector3.Distance(transform.position, hookshotPosition))
         {
             grapple_state = GrappleState.HookshotFlyingPlayer;
@@ -423,7 +423,8 @@ public class PlayerController : MonoBehaviour
         hookshotTransform.LookAt(hookshotPosition);
 
         // Hookshot goes down in size based on position of player and hookshotPosition
-        hookshotTransform.localScale = new Vector3(1, 1, Mathf.Abs(hookshotPosition.z - rb.transform.position.z));
+        //hookshotTransform.localScale = new Vector3(1, 1, Mathf.Abs(hookshotPosition.z - rb.transform.position.z));
+        grappleGraphic.SetPosition(0, feet.position);
         Vector3 hookshotDir = (hookshotPosition - rb.transform.position).normalized;
 
 
@@ -436,31 +437,29 @@ public class PlayerController : MonoBehaviour
 
         //Move Character Controller
 
-        rb.MovePosition(new Vector3(rb.transform.position.x + hookshotDir.x * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier + rb.velocity.x, 
-                                    rb.transform.position.y + hookshotDir.y * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier, 
-                                    rb.transform.position.z + hookshotDir.z * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier + rb.velocity.z));
+        //rb.MovePosition(new Vector3(rb.transform.position.x + hookshotDir.x * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier + rb.velocity.x, 
+        //                            rb.transform.position.y + hookshotDir.y * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier, 
+        //                            rb.transform.position.z + hookshotDir.z * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier + rb.velocity.z));
+
+        rb.AddForce(new Vector3( hookshotDir.x * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier,
+                                 hookshotDir.y * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier,
+                                 hookshotDir.z * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier), ForceMode.VelocityChange);
 
         float reachedHookshotPositionDistance = 1f;
 
-        if (Vector3.Distance(rb.transform.position, hookshotPosition) < reachedHookshotPositionDistance)
+        if (Vector3.Distance(feet.position, hookshotPosition) < reachedHookshotPositionDistance)
         {
             //Reached hookshot position
-            rb.AddForce(rb.velocity * 5, ForceMode.Impulse);
+            rb.AddForce(rb.velocity, ForceMode.Impulse);
             StopHookShot();
             grapple_state = GrappleState.Idle;
-            Debug.Log("<color=blue>" + rb.velocity + "</color>");
         }
 
         if (Input.GetButton("Jump"))
         {
-            //float momentumExtraSpeed = 1f;
-            //characterVelocityMomentum = hookshotDir * hookshotSpeed * momentumExtraSpeed;
             StopHookShot();
             grapple_state = GrappleState.Idle;
         }
-        // rb.MovePosition(hookshotDir * hookshotSpeed * Time.deltaTime);
-        // grapple_state = GrappleState.Normal;
-        // rb.transform.position += (hookshotDir * hookshotSpeed * Time.deltaTime);
     }
 
     private void StopHookShot()
@@ -539,22 +538,23 @@ public class PlayerController : MonoBehaviour
         
 
         //Checks the value of the Run toggle to detect if player has pressed the Run Toggle for a state change.
-        if (run_intensity > 0)
+        if (run_intensity > 0 && !duck_button)
         {
-            duck_toggle = false;
+            duck_button = false;
         }
 
-        if (duck_button) {
-            duck_toggle = !duck_toggle;
-        }
+        //if (duck_button) {
+        //    duck_toggle = !duck_toggle;
+        //}
 
-        if (duck_toggle)
+        if (duck_button)
         {
-            run_intensity = 0;
-            parentTransform.localScale = duckHeight;
+            Debug.Log("DUCK");
+            //run_intensity = 0;
+            parentTransform.parent.transform.localScale = duckHeight;
         }
         else {
-            parentTransform.localScale = normalHeight;
+            parentTransform.parent.transform.localScale = normalHeight;
         }
 
         if (grapple_button) {
@@ -673,6 +673,7 @@ public class PlayerController : MonoBehaviour
                 break;
             default:
                 Debug.Log("Can't hit");
+                hookshotTransform.gameObject.SetActive(false);
                 break;
         }
     }

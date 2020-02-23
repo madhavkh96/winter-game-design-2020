@@ -121,6 +121,15 @@ MonoBehaviour:
   m_FallMultiplier: 2.5
   m_ClimbHeight: 2
   m_grappleRange: 20
+  m_NormalColor:
+    serializedVersion: 2
+    rgba: 0
+  m_LockedColor:
+    serializedVersion: 2
+    rgba: 0
+  m_InteractingColor:
+    serializedVersion: 2
+    rgba: 0
   m_minimumXLook: -360
   m_maximumXLook: 360
   m_minimumYLook: -60
@@ -130,7 +139,6 @@ MonoBehaviour:
   jump_button: 0
   grapple_button: 0
   duck_toggle: 0
-  debugHitPointTransform: {fileID: 0}
   hookshotTransform: {fileID: 9110602671445420407}
   grapple_hit: 0
   isGrounded: 1
@@ -235,7 +243,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 112
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!114 &1726586737
 MonoBehaviour:
   m_ObjectHideFlags: 0
