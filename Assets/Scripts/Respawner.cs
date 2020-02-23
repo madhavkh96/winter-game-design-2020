@@ -10,7 +10,7 @@ public class Respawner : MonoBehaviour
     public  TextMeshProUGUI deathCounterText;
     public TextMeshProUGUI deathMessageText;
     private string causeOfDeathMessage = "Nothing";
-    private float deathMsgTimer = 5.0f;
+    private float deathMsgTimer = 2.0f;
 
 	private GUIStyle guiFontStyle = new GUIStyle();
 	private int deathCount = 0;
@@ -50,9 +50,11 @@ public class Respawner : MonoBehaviour
         deathMessageText.text = causeOfDeathMessage;
 
         while (deathScreen.GetComponent<CanvasGroup>().alpha < 1) {
-            deathScreen.GetComponent<CanvasGroup>().alpha += Time.deltaTime * 0.01f;
+            Time.timeScale = 0.0f;
+            deathScreen.GetComponent<CanvasGroup>().alpha += Time.unscaledDeltaTime * 0.01f;
         }
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSecondsRealtime(deathMsgTimer);
         deathScreen.GetComponent<CanvasGroup>().alpha = 0.0f;
+        Time.timeScale = 1.0f;
     }
 }

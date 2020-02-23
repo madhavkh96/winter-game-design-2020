@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviour
     {
         if (HUDscoreTracker.instance.score < coins.Length)
         {
-            timer += Time.deltaTime;
+            timer += Time.unscaledDeltaTime;
             timeText.text = timer.ToString();
         }
     }

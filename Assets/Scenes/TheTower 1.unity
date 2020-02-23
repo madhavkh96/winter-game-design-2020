@@ -549,6 +549,11 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 138b35dd321622a4d93635b532ae8b8e, type: 2}
+    - target: {fileID: 4397389921410324864, guid: 2689fcbc2658a43ea8c54f79cafc434a,
+        type: 3}
+      propertyPath: m_ReceiveShadows
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5876676088523497661, guid: 2689fcbc2658a43ea8c54f79cafc434a,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -8508,7 +8513,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1726586737, guid: 52b4b23f58e555841a2b72d436f479e0, type: 3}
       propertyPath: respawnPoint.y
-      value: 1.5
+      value: 1.6
       objectReference: {fileID: 0}
     - target: {fileID: 1726586737, guid: 52b4b23f58e555841a2b72d436f479e0, type: 3}
       propertyPath: respawnPoint.z
@@ -8525,7 +8530,7 @@ PrefabInstance:
     - target: {fileID: 369968435807643432, guid: 52b4b23f58e555841a2b72d436f479e0,
         type: 3}
       propertyPath: m_YLookSensitivity
-      value: 8
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 369968435807643432, guid: 52b4b23f58e555841a2b72d436f479e0,
         type: 3}
