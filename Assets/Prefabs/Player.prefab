@@ -116,20 +116,20 @@ MonoBehaviour:
   m_RunMultiplier: 12
   m_DuckMultiplier: 4
   m_XLookSensitivity: 6
-  m_YLookSensitivity: 10
+  m_YLookSensitivity: 6
   m_jumpForce: 1
   m_FallMultiplier: 2.5
   m_ClimbHeight: 2
   m_grappleRange: 20
   m_NormalColor:
     serializedVersion: 2
-    rgba: 0
+    rgba: 4278190080
   m_LockedColor:
     serializedVersion: 2
-    rgba: 0
+    rgba: 4280229844
   m_InteractingColor:
     serializedVersion: 2
-    rgba: 0
+    rgba: 4292238619
   m_minimumXLook: -360
   m_maximumXLook: 360
   m_minimumYLook: -60
@@ -145,7 +145,7 @@ MonoBehaviour:
   wallHitClimb: 1
   rightWallRun: 0
   leftWallRun: 0
-  WallRunDist: 2
+  WallRunDist: 2.5
 --- !u!33 &369968435807643437
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -256,7 +256,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9e5fd7c5988f4ef8a3c621076407709, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  respawnPoint: {x: 0.3, y: 1.1, z: 1.8}
+  respawnPoint: {x: -2.6, y: 1.6, z: 11.91}
   deathCounterText: {fileID: 0}
   deathMessageText: {fileID: 0}
 --- !u!65 &358766802853127812

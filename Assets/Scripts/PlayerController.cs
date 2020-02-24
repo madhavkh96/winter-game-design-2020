@@ -215,9 +215,9 @@ public class PlayerController : MonoBehaviour
 
         if (jump_button && wallHitClimb) { Climb(); }
 
-        if (jump_button && rightWallRun || leftWallRun) { WallRun(); }
+        if (jump_button && (rightWallRun || leftWallRun)) { WallRun(); }
 
-        if (jump_button && !rightWallRun && !leftWallRun)
+        if (jump_button && !rightWallRun && !leftWallRun && !wallHitClimb)
         {
             rb.useGravity = true;
             Camera.main.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, 0);
@@ -631,8 +631,8 @@ public class PlayerController : MonoBehaviour
 
 
     void RayCollisionWallRun() {
-        if (Physics.Raycast(feet.position, transform.TransformDirection(Vector3.right), out rightHit, 1f, layerMask)) {
-            // Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right), Color.red);
+        if ((Physics.Raycast(feet.position, transform.TransformDirection(Vector3.right), out rightHit, 1f, layerMask)) && !wallHitClimb) {
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right), Color.red);
             rightWallRun = true;
         }
         else {
@@ -640,7 +640,7 @@ public class PlayerController : MonoBehaviour
             rightWallRun = false;
         }
 
-        if (Physics.Raycast(feet.position, transform.TransformDirection(-Vector3.right), out leftHit, 1f, layerMask))
+        if (Physics.Raycast(feet.position, transform.TransformDirection(-Vector3.right), out leftHit, 1f, layerMask) && !wallHitClimb)
         {
             // Debug.DrawRay(transform.position, transform.TransformDirection(-Vector3.right), Color.red);
             leftWallRun = true;
@@ -775,7 +775,7 @@ public class PlayerController : MonoBehaviour
         }
 
         if (!wallRun_timer_countdown) {
-            WallRunDist = 2.0f;
+            WallRunDist = 2.5f;
             if (m_thirdPersonMode)
             {
                 //Insert here the Third person animation state Var
