@@ -3,8 +3,8 @@
 public class Gun : MonoBehaviour
 {
     public float damage = 10f;
-    public float range = 100f;
-    public float fireRate = 1000f;
+    public float range = 1000f;
+    public float fireRate = 15f;
     public float impactForce = 30f;
 
     public Camera fpsCam;
@@ -42,11 +42,13 @@ public class Gun : MonoBehaviour
             Target target = hit.transform.GetComponent<Target>();
             if (target != null)
             {
+                Debug.Log("Target Taking Damage");
                 target.TakeDamage(damage);
             }
 
             if (hit.rigidbody != null)
             {
+                Debug.Log("Not A Target");
                 hit.rigidbody.AddForce(-hit.normal * impactForce);
             }
 
