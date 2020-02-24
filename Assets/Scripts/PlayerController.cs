@@ -331,11 +331,12 @@ public class PlayerController : MonoBehaviour
 
 
     void Slide() {
-        Debug.Log("Slide Called");
+        // Debug.Log("Slide Called");
         rb.AddForce(moveDirection * rb.velocity.magnitude, ForceMode.Impulse);   
     }
 
     void Jump() {
+        Debug.Log("Jump called");
 
         if (!wallHitClimb && !jump_Called && !leftWallRun && !rightWallRun)
         {
@@ -365,13 +366,14 @@ public class PlayerController : MonoBehaviour
         CharacterState.character_activity = ActivityState.wallrun;
         rb.useGravity = false;
         wallRun_timer_countdown = true;
+
     }
 
     private void HandleHookShotDetect()
     {
         if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out grappleHit, m_grappleRange))
         {
-            Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.red);
+            // Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.red);
             GameManager.instance.m_ReticleImage.color = m_LockedColor;
             if (grapple_state == GrappleState.Idle)
             {
@@ -382,7 +384,7 @@ public class PlayerController : MonoBehaviour
 
         else
         {
-            Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.white);
+            // Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.white);
             grapple_state = GrappleState.Idle;
             GameManager.instance.m_ReticleImage.color = m_NormalColor;
         }
@@ -395,7 +397,7 @@ public class PlayerController : MonoBehaviour
         hookshotTransform.gameObject.SetActive(true);
         hookshotTransform.localScale = Vector3.zero;
         grapple_state = GrappleState.HookshotThrown;
-        Debug.Log("Grapple target hit");
+        // Debug.Log("Grapple target hit");
     }
 
     private void HandleHookshotThrown()
@@ -464,7 +466,7 @@ public class PlayerController : MonoBehaviour
 
     private void StopHookShot()
     {
-        Debug.Log(rb.velocity);
+        // Debug.Log(rb.velocity);
         grapple_state = GrappleState.Idle;
         hookshotTransform.gameObject.SetActive(false);
     }
@@ -566,32 +568,32 @@ public class PlayerController : MonoBehaviour
         if (run_intensity > 0&& Mathf.Abs(movementInputs[0]) > 0.85f && Mathf.Abs(movementInputs[1]) > 0.85f)
         {
             currentCharacterState = new CharacterState(MovementType.run, ActivityState.none);
-            Debug.Log("<color=blue> Run, None</color>");
+            // Debug.Log("<color=blue> Run, None</color>");
             return currentCharacterState;
         }
         else if (run_intensity > 0 && Mathf.Abs(movementInputs[0]) <= 0.85f && Mathf.Abs(movementInputs[1]) <= 0.85f)
         {
             run_intensity = 0;
-            Debug.Log("<color=green> Walk, None</color>");
+            // Debug.Log("<color=green> Walk, None</color>");
             currentCharacterState = new CharacterState(MovementType.walk, ActivityState.none);
             return currentCharacterState;
 
         }
         else if (duck_toggle && CharacterState.character_movement == MovementType.walk ||
                  duck_toggle && CharacterState.character_movement == MovementType.idle) {
-            Debug.Log("<color=yellow> Walk / Idle, Duck</color>");
+            // Debug.Log("<color=yellow> Walk / Idle, Duck</color>");
             currentCharacterState = new CharacterState(MovementType.walk, ActivityState.duck);
             return currentCharacterState;
         }
         else if (vert_move == 0 && hor_move == 0)
         {
             currentCharacterState = new CharacterState(MovementType.idle, ActivityState.none);
-            Debug.Log("<color=red> Idle</color>");
+            // Debug.Log("<color=red> Idle</color>");
             return currentCharacterState;
         }
         else
         {
-            Debug.Log("<color=green> Walk, None</color>");
+            // Debug.Log("<color=green> Walk, None</color>");
             currentCharacterState = new CharacterState(MovementType.walk, ActivityState.none);
             return currentCharacterState;
         }
@@ -618,33 +620,33 @@ public class PlayerController : MonoBehaviour
     void RayCollisionClimb() {
         if (Physics.Raycast(feet.position, transform.TransformDirection(Vector3.forward), out hit, 1f, layerMask))
         {
-            Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.red);
+           // Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.red);
             wallHitClimb = true;
         }
         else {
             wallHitClimb = false;
-            Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.forward) * 2, Color.white);
+           //  Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.forward) * 2, Color.white);
         }
     }
 
 
     void RayCollisionWallRun() {
         if (Physics.Raycast(feet.position, transform.TransformDirection(Vector3.right), out rightHit, 1f, layerMask)) {
-            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right), Color.red);
+            // Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right), Color.red);
             rightWallRun = true;
         }
         else {
-            Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.right), Color.white);           
+            // Debug.DrawRay(feet.position, transform.TransformDirection(Vector3.right), Color.white);           
             rightWallRun = false;
         }
 
         if (Physics.Raycast(feet.position, transform.TransformDirection(-Vector3.right), out leftHit, 1f, layerMask))
         {
-            Debug.DrawRay(transform.position, transform.TransformDirection(-Vector3.right), Color.red);
+            // Debug.DrawRay(transform.position, transform.TransformDirection(-Vector3.right), Color.red);
             leftWallRun = true;
         }
         else {
-            Debug.DrawRay(feet.position, transform.TransformDirection(-Vector3.right), Color.white);
+           // Debug.DrawRay(feet.position, transform.TransformDirection(-Vector3.right), Color.white);
             leftWallRun = false;
         }
     }
@@ -653,7 +655,7 @@ public class PlayerController : MonoBehaviour
     void GrappleMovement() {
 
 
-        Debug.Log(grapple_state);
+        // Debug.Log(grapple_state);
 
         HandleHookShotDetect();
 
@@ -705,7 +707,7 @@ public class PlayerController : MonoBehaviour
                     m_Animator.SetBool("running", true);
                     break;
                 default:
-                    Debug.LogError("Invalid Movement State Animation");
+                   //  Debug.LogError("Invalid Movement State Animation");
                     break;
             }
         }
