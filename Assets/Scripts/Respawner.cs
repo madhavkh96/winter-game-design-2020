@@ -12,14 +12,22 @@ public class Respawner : MonoBehaviour
     private string causeOfDeathMessage = "Nothing";
     private float deathMsgTimer = 2.0f;
 
-	private GUIStyle guiFontStyle = new GUIStyle();
+
+    public float health = 50f;
+    public float maxHealth = 50f;
+
+    public GameObject healthBarUI;
+    public Slider slider;
+
+    private GUIStyle guiFontStyle = new GUIStyle();
 	private int deathCount = 0;
 
 	void Start()
 	{
 		guiFontStyle.fontSize = 32;
         guiFontStyle.normal.textColor = Color.red;
-	}
+        slider.value = maxHealth;
+    }
     public void playerRespawn(string causeOfDeath){
         //currently resets player to one standard spawn point
         Transform playerTransform = GetComponentInParent<Transform>();
@@ -28,6 +36,7 @@ public class Respawner : MonoBehaviour
         deathCount++;
         deathCounterText.text = deathCount.ToString();
         StartCoroutine("DeathPrompt");
+        slider.value = maxHealth;
     }
     void OnGUI()
      {
@@ -43,6 +52,23 @@ public class Respawner : MonoBehaviour
    //      }
             
      }
+
+    public void TakeDamage(float amount)
+    {
+        healthBarUI.SetActive(true);
+        health -= amount;
+        slider.value = health;
+        Debug.Log(health);
+        if (health <= 0f)
+        {
+            Die();
+        }
+    }
+
+    void Die()
+    {
+        playerRespawn("lazers");
+    }
 
 
     IEnumerator DeathPrompt() {

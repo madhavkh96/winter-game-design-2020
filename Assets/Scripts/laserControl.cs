@@ -6,6 +6,8 @@ public class laserControl : MonoBehaviour
 {
     public float laserSpeed = 5f;
     public float laserLife = 5f;
+
+    public float damage = 10f;
     
     
     // Start is called before the first frame update
@@ -29,7 +31,7 @@ public class laserControl : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if(other.gameObject.tag == "Player"){
-            other.gameObject.GetComponent<Respawner>().playerRespawn("Lazerz");
+            other.gameObject.GetComponent<Respawner>().TakeDamage(damage);
         }
     }
 }
