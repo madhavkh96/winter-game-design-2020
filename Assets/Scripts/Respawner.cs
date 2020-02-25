@@ -32,6 +32,7 @@ public class Respawner : MonoBehaviour
         //currently resets player to one standard spawn point
         Transform playerTransform = GetComponentInParent<Transform>();
         playerTransform.position = respawnPoint;
+        playerTransform.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
         causeOfDeathMessage = "Player died from " + causeOfDeath;
         deathCount++;
         deathCounterText.text = deathCount.ToString();
