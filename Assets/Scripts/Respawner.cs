@@ -7,6 +7,7 @@ using TMPro;
 public class Respawner : MonoBehaviour
 {
     public Vector3 respawnPoint;
+    private Quaternion respawnOrientation;
     public  TextMeshProUGUI deathCounterText;
     public TextMeshProUGUI deathMessageText;
     private string causeOfDeathMessage = "Nothing";
@@ -27,11 +28,13 @@ public class Respawner : MonoBehaviour
 		guiFontStyle.fontSize = 32;
         guiFontStyle.normal.textColor = Color.red;
         slider.value = maxHealth;
+        respawnOrientation = GetComponentInParent<Transform>().rotation;
     }
     public void playerRespawn(string causeOfDeath){
         //currently resets player to one standard spawn point
         Transform playerTransform = GetComponentInParent<Transform>();
         playerTransform.position = respawnPoint;
+        playerTransform.rotation = respawnOrientation;
         playerTransform.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
         causeOfDeathMessage = "Player died from " + causeOfDeath;
         deathCount++;

@@ -32,6 +32,11 @@ public class laserControl : MonoBehaviour
     {
         if(other.gameObject.tag == "Player"){
             other.gameObject.GetComponent<Respawner>().TakeDamage(damage);
+            Destroy(gameObject);
+        }
+        else if (other.gameObject.tag == "Ground")
+        {
+            Destroy(gameObject);
         }
     }
 }
