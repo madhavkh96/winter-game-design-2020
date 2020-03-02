@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -9,6 +10,8 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI timeText;
 
     private GameObject pauseMenu;
+
+    public TextMeshProUGUI bestTime;
 
     //Sensitivity Variables;
     [Header("Sensitivity Variables")]
@@ -20,12 +23,14 @@ public class GameManager : MonoBehaviour
 
     private float timer = 0;
 
+    private Button reload_btn;
+
     public Image m_ReticleImage;
 
     public static GameManager instance = null;
 
     internal bool pauseMenuActive = false;
-
+    internal bool reloadLevel = false;
 
     private void Awake()
     {
@@ -38,10 +43,14 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        //senstivity_output = GameObject.Find("Current Sensitivity").GetComponent<TextMeshProUGUI>();
-        pauseMenu = GameObject.Find("PauseMenu");
+        senstivity_output = GameObject.Find("Current Sensitivity").GetComponent<TextMeshProUGUI>();
+        reload_btn = GameObject.Find("ReloadLevel").GetComponent<Button>();
         apply_btn = GameObject.Find("Apply").GetComponent<Button>();
+        pauseMenu = GameObject.Find("PauseMenu");
         apply_btn.onClick.AddListener(() => ApplySetting());
+        reload_btn.onClick.AddListener(() => ReloadLevel());
+        bestTime.text = "Time to beat : 30.00";
+                
     }
 
     private void Update()
@@ -49,7 +58,7 @@ public class GameManager : MonoBehaviour
         if (HUDscoreTracker.instance.score < coins.Length)
         {
             timer += Time.unscaledDeltaTime;
-            timeText.text = timer.ToString();
+            timeText.text = timer.ToString("000.00");
         }
 
         if (pauseMenuActive)
@@ -74,6 +83,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
+
+    void ReloadLevel() {
+        reloadLevel = true;
+        SceneManager.LoadScene(1);
+    }
 
     void ApplySetting() {
         pauseMenuActive = false;

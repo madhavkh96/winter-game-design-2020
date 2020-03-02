@@ -27,11 +27,12 @@ public class Respawner : MonoBehaviour
 	{
 		guiFontStyle.fontSize = 32;
         guiFontStyle.normal.textColor = Color.red;
-        //slider.value = maxHealth;
+        healthBarImage.fillAmount = maxHealth / maxHealth;
         respawnOrientation = GetComponentInParent<Transform>().rotation;
     }
     public void playerRespawn(string causeOfDeath){
         //currently resets player to one standard spawn point
+        healthBarImage.fillAmount = maxHealth / maxHealth;
         Transform playerTransform = GetComponentInParent<Transform>();
         playerTransform.position = respawnPoint;
         playerTransform.rotation = respawnOrientation;
@@ -40,7 +41,6 @@ public class Respawner : MonoBehaviour
         deathCount++;
         deathCounterText.text = deathCount.ToString();
         StartCoroutine("DeathPrompt");
-        healthBarImage.fillAmount = maxHealth / maxHealth;
     }
     void OnGUI()
      {
@@ -61,7 +61,7 @@ public class Respawner : MonoBehaviour
     {
         healthBarUI.SetActive(true);
         health -= amount;
-        healthBarImage.fillAmount = health/maxHealth;
+        healthBarImage.fillAmount = health / maxHealth;
         Debug.Log(health);
         if (health <= 0f)
         {

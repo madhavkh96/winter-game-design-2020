@@ -685,10 +685,13 @@ public class PlayerController : MonoBehaviour
 
     void GrappleMovement() {
 
-
-        Debug.Log(grapple_state);
-
         HandleHookShotDetect();
+
+        if (GameManager.instance.reloadLevel) {
+            grapple_state = GrappleState.Idle;
+            GameManager.instance.reloadLevel = false;
+        }
+
 
         switch (grapple_state)
         {
