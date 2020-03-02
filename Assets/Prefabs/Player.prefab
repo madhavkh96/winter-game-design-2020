@@ -92,6 +92,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 8476350610597368945}
+  - {fileID: 9110602671445420407}
   - {fileID: 369968436013539061}
   m_Father: {fileID: 369968435916177302}
   m_RootOrder: 0
@@ -112,15 +113,15 @@ MonoBehaviour:
   m_firstPersonPosition: {x: 0, y: 0, z: 0}
   m_ThirdPersonPosition: {x: 0, y: 1.16, z: 2.51}
   m_screenShake: 1
-  m_WalkMultiplier: 7
-  m_RunMultiplier: 12
+  m_WalkMultiplier: 5
+  m_RunMultiplier: 10
   m_DuckMultiplier: 4
   m_XLookSensitivity: 6
   m_YLookSensitivity: 6
   m_jumpForce: 1
   m_FallMultiplier: 2.5
   m_ClimbHeight: 2
-  m_grappleRange: 20
+  m_grappleRange: 30
   m_NormalColor:
     serializedVersion: 2
     rgba: 4278190080
@@ -136,8 +137,6 @@ MonoBehaviour:
   m_maximumYLook: 60
   m_Animator: {fileID: 6991596139333700691}
   frameCounter: 10
-  jump_button: 0
-  grapple_button: 0
   duck_toggle: 0
   hookshotTransform: {fileID: 9110602671445420407}
   grapple_hit: 0
@@ -259,6 +258,10 @@ MonoBehaviour:
   respawnPoint: {x: -2.6, y: 1.6, z: 11.91}
   deathCounterText: {fileID: 0}
   deathMessageText: {fileID: 0}
+  health: 50
+  maxHealth: 50
+  healthBarUI: {fileID: 0}
+  slider: {fileID: 0}
 --- !u!65 &358766802853127812
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -314,10 +317,9 @@ Transform:
   m_LocalPosition: {x: 0, y: 0.28200018, z: 0.05000019}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 9110602671445420407}
   - {fileID: 891170951675641193}
   m_Father: {fileID: 369968435807643430}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &369968436013539058
 Camera:
@@ -2828,7 +2830,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 432006, guid: e36f1cba35b0f8847a9997bbd6292b95, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 432006, guid: e36f1cba35b0f8847a9997bbd6292b95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -2879,7 +2881,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 369968436013539061}
+    m_TransformParent: {fileID: 369968435807643430}
     m_Modifications:
     - target: {fileID: 6494180183771713362, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
         type: 3}
@@ -2899,27 +2901,27 @@ PrefabInstance:
     - target: {fileID: 6494180183771713365, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.28200018
       objectReference: {fileID: 0}
     - target: {fileID: 6494180183771713365, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.05000019
       objectReference: {fileID: 0}
     - target: {fileID: 6494180183771713365, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 6494180183771713365, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 6494180183771713365, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 6494180183771713365, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
         type: 3}
@@ -2929,7 +2931,7 @@ PrefabInstance:
     - target: {fileID: 6494180183771713365, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
         type: 3}
       propertyPath: m_RootOrder
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6494180183771713365, guid: 59f0bf8405ae59245b8f7fb66a32b8d8,
         type: 3}

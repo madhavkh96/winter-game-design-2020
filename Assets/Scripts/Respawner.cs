@@ -27,7 +27,7 @@ public class Respawner : MonoBehaviour
 	{
 		guiFontStyle.fontSize = 32;
         guiFontStyle.normal.textColor = Color.red;
-        slider.value = maxHealth;
+        //slider.value = maxHealth;
         respawnOrientation = GetComponentInParent<Transform>().rotation;
     }
     public void playerRespawn(string causeOfDeath){

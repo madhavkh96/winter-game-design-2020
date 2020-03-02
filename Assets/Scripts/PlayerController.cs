@@ -72,11 +72,13 @@ public class PlayerController : MonoBehaviour
     float h_look;
     float run_intensity;
     bool duck_button;
-    public bool jump_button;
-    public bool grapple_button;
+    bool jump_button;
+    bool grapple_button;
+    bool pause_button;
 
     //bool run_toggle;
     public bool duck_toggle;
+    bool pause_toggle;
 
     Rigidbody rb;
     Transform parentTransform;
@@ -160,7 +162,12 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         ClimbUpdateLoop();
-        WallRunUpdateLoop();                
+        WallRunUpdateLoop();
+
+        if (GameManager.instance.pauseMenuActive) {
+            m_XLookSensitivity = (int)GameManager.instance.sensitivity;
+            m_YLookSensitivity = (int)GameManager.instance.sensitivity - 1;
+        }
     }
 
     void FixedUpdate()
@@ -180,14 +187,14 @@ public class PlayerController : MonoBehaviour
         duck_button = Input.GetButton("Duck");
         jump_button = Input.GetButton("Jump");
         grapple_button = Input.GetButton("Grapple");
+        pause_button = Input.GetButtonDown("Pause");
+
+
 
         // Detects the state the player currently is.
         CharacterState = CurrentMovementStage();
 
-        // Methods on the player
-        Movement(vert_move, hor_move);
-
-        RotateVertical(v_look);
+        
 
         if (!StillLooking(lookRotationInputs))
             RotateHorizontal(h_look);
@@ -196,7 +203,7 @@ public class PlayerController : MonoBehaviour
 
 
         PlayerActions();
-        
+        SceneActions();
 
         if (m_thirdPersonMode) 
             SetAnimation(CharacterState);
@@ -205,11 +212,24 @@ public class PlayerController : MonoBehaviour
 
     #region PlayerActions
 
+    void SceneActions() {
+        if (pause_button)
+        {
+            GameManager.instance.pauseMenuActive = !GameManager.instance.pauseMenuActive;
+        }
+
+    }
+
     void PlayerActions() {
 
         RayCollisionClimb();
         RayCollisionWallRun();
         GrappleMovement();
+
+        // Methods on the player
+        Movement(vert_move, hor_move);
+
+        RotateVertical(v_look);
 
         if (jump_button && isGrounded) { Jump(); }
 
@@ -242,7 +262,6 @@ public class PlayerController : MonoBehaviour
     }
 
     #endregion
-
 
     #region Movement And Rotation    
 
@@ -414,6 +433,18 @@ public class PlayerController : MonoBehaviour
 
         if (hookshotSize >= Vector3.Distance(transform.position, hookshotPosition))
         {
+            Vector3 hookshotDir = (hookshotPosition - rb.transform.position).normalized;
+
+
+
+            float hookshotSpeedMin = 10f;
+            float hookshotSpeedMax = 40f;
+            float hookshotSpeed = Mathf.Clamp(Vector3.Distance(rb.transform.position, hookshotPosition), hookshotSpeedMin, hookshotSpeedMax);
+            float hookshotSpeedMultiplier = 1f;
+
+            rb.AddForce(new Vector3(hookshotDir.x * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier,
+                                hookshotDir.y * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier,
+                                hookshotDir.z * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier), ForceMode.Impulse);
             grapple_state = GrappleState.HookshotFlyingPlayer;
         }
     }
@@ -447,12 +478,12 @@ public class PlayerController : MonoBehaviour
                                  hookshotDir.y * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier,
                                  hookshotDir.z * Time.fixedDeltaTime * hookshotSpeed * hookshotSpeedMultiplier), ForceMode.VelocityChange);
 
-        float reachedHookshotPositionDistance = 1f;
+        float reachedHookshotPositionDistance = 5f;
 
         if (Vector3.Distance(feet.position, hookshotPosition) < reachedHookshotPositionDistance)
         {
             //Reached hookshot position
-            rb.AddForce(rb.velocity, ForceMode.Impulse);
+            //rb.AddForce(rb.velocity, ForceMode.Impulse);
             StopHookShot();
             grapple_state = GrappleState.Idle;
         }
@@ -631,7 +662,7 @@ public class PlayerController : MonoBehaviour
 
 
     void RayCollisionWallRun() {
-        if ((Physics.Raycast(feet.position, transform.TransformDirection(Vector3.right), out rightHit, 1f, layerMask)) && !wallHitClimb) {
+        if ((Physics.Raycast(rb.transform.position, transform.TransformDirection(Vector3.right), out rightHit, 1f, layerMask)) && !wallHitClimb) {
             Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.right), Color.red);
             rightWallRun = true;
         }
@@ -640,7 +671,7 @@ public class PlayerController : MonoBehaviour
             rightWallRun = false;
         }
 
-        if (Physics.Raycast(feet.position, transform.TransformDirection(-Vector3.right), out leftHit, 1f, layerMask) && !wallHitClimb)
+        if (Physics.Raycast(rb.transform.position, transform.TransformDirection(-Vector3.right), out leftHit, 1f, layerMask) && !wallHitClimb)
         {
             // Debug.DrawRay(transform.position, transform.TransformDirection(-Vector3.right), Color.red);
             leftWallRun = true;
@@ -655,7 +686,7 @@ public class PlayerController : MonoBehaviour
     void GrappleMovement() {
 
 
-        // Debug.Log(grapple_state);
+        Debug.Log(grapple_state);
 
         HandleHookShotDetect();
 
@@ -674,7 +705,6 @@ public class PlayerController : MonoBehaviour
                 HandleHookshotMovement();
                 break;
             default:
-                Debug.Log("Can't hit");
                 hookshotTransform.gameObject.SetActive(false);
                 break;
         }
@@ -748,6 +778,7 @@ public class PlayerController : MonoBehaviour
         else if (climbDistance < 0)
         {
             climb_timer_countdown = false;
+            rb.isKinematic = false;
             rb.useGravity = true;
         }
 
@@ -771,6 +802,7 @@ public class PlayerController : MonoBehaviour
         }
         else if (WallRunDist < 0) {
             wallRun_timer_countdown = false;
+            rb.isKinematic = false;
             rb.useGravity = true;
         }
 
