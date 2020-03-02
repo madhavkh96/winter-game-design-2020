@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
     private GameObject pauseMenu;
 
     //Sensitivity Variables;
+    [Header("Sensitivity Variables")]
     public Slider sensitivity_slider;
     private Button apply_btn;
     internal float sensitivity;
@@ -37,8 +38,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        //sensitivity_slider = GameObject.Find("Sensitivity Slider").GetComponent<Slider>();
-        senstivity_output = GameObject.Find("Current Sensitivity").GetComponent<TextMeshProUGUI>();
+        //senstivity_output = GameObject.Find("Current Sensitivity").GetComponent<TextMeshProUGUI>();
         pauseMenu = GameObject.Find("PauseMenu");
         apply_btn = GameObject.Find("Apply").GetComponent<Button>();
         apply_btn.onClick.AddListener(() => ApplySetting());

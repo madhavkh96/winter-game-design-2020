@@ -18,7 +18,7 @@ public class Respawner : MonoBehaviour
     public float maxHealth = 50f;
 
     public GameObject healthBarUI;
-    public Slider slider;
+    public Image healthBarImage;
 
     private GUIStyle guiFontStyle = new GUIStyle();
 	private int deathCount = 0;
@@ -40,7 +40,7 @@ public class Respawner : MonoBehaviour
         deathCount++;
         deathCounterText.text = deathCount.ToString();
         StartCoroutine("DeathPrompt");
-        slider.value = maxHealth;
+        healthBarImage.fillAmount = maxHealth / maxHealth;
     }
     void OnGUI()
      {
@@ -61,7 +61,7 @@ public class Respawner : MonoBehaviour
     {
         healthBarUI.SetActive(true);
         health -= amount;
-        slider.value = health;
+        healthBarImage.fillAmount = health/maxHealth;
         Debug.Log(health);
         if (health <= 0f)
         {

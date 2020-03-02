@@ -173,7 +173,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e170c52234d2de48b2e1cd6f2085b28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Door: 1
   doorAnimator: {fileID: 4171832286740962331}
+  m_Tutorial: 0
+  tutorialText: {fileID: 0}
 --- !u!1 &8058591452448959932
 GameObject:
   m_ObjectHideFlags: 0
