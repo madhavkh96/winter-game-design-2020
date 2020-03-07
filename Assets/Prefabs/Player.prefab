@@ -128,8 +128,11 @@ MonoBehaviour:
     rgba: 3523478776
   m_NormalColor:
     serializedVersion: 2
-    rgba: 3674200393
+    rgba: 3657433088
   m_LockedColor:
+    serializedVersion: 2
+    rgba: 3674201965
+  m_notAvailableColor:
     serializedVersion: 2
     rgba: 0
   m_InteractingColor:

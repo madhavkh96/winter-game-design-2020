@@ -51,6 +51,7 @@ public class PlayerController : MonoBehaviour
     public Color32 m_EnemyHit;
     public Color32 m_NormalColor;
     public Color32 m_LockedColor;
+    public Color32 m_notAvailableColor;
     public Color32 m_InteractingColor;
 
 
@@ -137,6 +138,7 @@ public class PlayerController : MonoBehaviour
     bool wallRun_timer_countdown = false;
     public float WallRunDist = 2;
     float initialFieldOfView;
+    float velocitydependentFieldOfView;
 
     #endregion
 
@@ -222,7 +224,7 @@ public class PlayerController : MonoBehaviour
 
     void PlayerActions()
     {
-
+        AdjustCameraFOV();
         RayCollisionClimb();
         RayCollisionWallRun();
         if (GameManager.instance.canGrapple)
@@ -419,6 +421,8 @@ public class PlayerController : MonoBehaviour
             {
                 // Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.red);
                 GameManager.instance.grapple_availableImage.color = m_LockedColor;
+                GameManager.instance.m_ReticleImage.color = m_NormalColor;
+
                 if (grapple_state == GrappleState.Idle)
                 {
                     hookshotTransform.gameObject.SetActive(false);
@@ -431,7 +435,7 @@ public class PlayerController : MonoBehaviour
         {
             // Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * m_grappleRange, Color.white);
             grapple_state = GrappleState.Idle;
-            GameManager.instance.grapple_availableImage.color = m_NormalColor;
+            GameManager.instance.grapple_availableImage.color = m_notAvailableColor;
             GameManager.instance.m_ReticleImage.color = m_NormalColor;
         }
     }
@@ -487,7 +491,7 @@ public class PlayerController : MonoBehaviour
         grappleGraphic.SetPosition(0, feet.position);
         Vector3 hookshotDir = (hookshotPosition - rb.transform.position).normalized;
 
-        if (Camera.main.fieldOfView < initialFieldOfView + 40) Camera.main.fieldOfView += 0.6f;
+        //if (Camera.main.fieldOfView < initialFieldOfView + 40) Camera.main.fieldOfView += 15f * Time.deltaTime;
 
         float hookshotSpeedMin = 10f;
         float hookshotSpeedMax = 40f;
@@ -662,6 +666,11 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void AdjustCameraFOV() {
+        velocitydependentFieldOfView = Mathf.Lerp(0, rb.velocity.y*10, Time.deltaTime * 5);
+        Camera.main.fieldOfView = initialFieldOfView + velocitydependentFieldOfView;
+    }
+
     void SetCharacterLocation()
     {
         if (CharacterLocState.instance.currentCharacterLocation == CharacterLocState.CharacterLocation.grounded)
@@ -772,10 +781,9 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator Release()
     {
-        while (Camera.main.fieldOfView > initialFieldOfView)
-        {
-            Camera.main.fieldOfView -= 0.6f;
-        }
+        //while (Camera.main.fieldOfView > initialFieldOfView)
+        //{
+        //}
         yield return null;
     }
 

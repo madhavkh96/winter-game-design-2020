@@ -18,7 +18,7 @@ public class Target : MonoBehaviour
         healthBarUI.SetActive(true);
         health -= amount;
         slider.value = health;
-        Debug.Log(health);
+        //Debug.Log(health);
         if (health <= 0f)
         {
             Die();

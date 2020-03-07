@@ -46,7 +46,7 @@ public class GameManager : MonoBehaviour
     internal bool canGrapple = false;
     internal bool canShoot = false;
     internal bool countTimer = true;
-
+    internal bool isRespawning = false;
     private AudioSource gameAudioSource;
 
     private void Awake()
@@ -85,14 +85,10 @@ public class GameManager : MonoBehaviour
             canMove = true;
             countTimer = true;
         }
-        if (HUDscoreTracker.instance.score < coins.Length && countTimer) 
-        {
-            timer += Time.unscaledDeltaTime;
-            timeText.text = timer.ToString("000.00");
-        }
 
         if (pauseMenuActive)
         {
+            countTimer = false;
             Time.timeScale = 0.0f;
             pauseMenu.SetActive(true);
             sensitivity = sensitivity_slider.value;
@@ -108,8 +104,18 @@ public class GameManager : MonoBehaviour
                 senstivity_output.text = "ULTRA HIGH";
         }
         else {
+            countTimer = true;
             Time.timeScale = 1.0f;
             pauseMenu.SetActive(false);
+        }
+
+        if (isRespawning) Time.timeScale = 0.0f;
+        else Time.timeScale = 1.0f;
+
+        if (HUDscoreTracker.instance.score < coins.Length && countTimer)
+        {
+            timer += Time.unscaledDeltaTime;
+            timeText.text = timer.ToString("000.00");
         }
     }
 

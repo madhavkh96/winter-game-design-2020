@@ -78,13 +78,13 @@ public class Respawner : MonoBehaviour
     IEnumerator DeathPrompt() {
         GameObject deathScreen = GameObject.Find("DeathScreen");
         deathMessageText.text = causeOfDeathMessage;
+        GameManager.instance.isRespawning = true;
 
         while (deathScreen.GetComponent<CanvasGroup>().alpha < 1) {
-            Time.timeScale = 0.0f;
             deathScreen.GetComponent<CanvasGroup>().alpha += Time.unscaledDeltaTime * 0.01f;
         }
         yield return new WaitForSecondsRealtime(deathMsgTimer);
+        GameManager.instance.isRespawning = false;
         deathScreen.GetComponent<CanvasGroup>().alpha = 0.0f;
-        Time.timeScale = 1.0f;
     }
 }
