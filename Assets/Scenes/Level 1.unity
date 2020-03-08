@@ -993,6 +993,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 52b4b23f58e555841a2b72d436f479e0, type: 3}
+--- !u!1 &242842783 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6102750617446068211, guid: 72d981a89757842b0bf9b825884c5d81,
+    type: 3}
+  m_PrefabInstance: {fileID: 464690100}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &292814776
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1139,6 +1145,12 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4350644910863500, guid: 36f73ba48af97f64fb68b254be9aaab5,
     type: 3}
   m_PrefabInstance: {fileID: 297177224}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &304665893 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6102750617446068211, guid: 72d981a89757842b0bf9b825884c5d81,
+    type: 3}
+  m_PrefabInstance: {fileID: 410258339}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &304665894 stripped
 Transform:
@@ -5477,6 +5489,12 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1290068368}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1293325520 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6102750617446068211, guid: 72d981a89757842b0bf9b825884c5d81,
+    type: 3}
+  m_PrefabInstance: {fileID: 1688676551}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1422774636
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5601,6 +5619,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6acf036e14cf86b4dbc2f4bbc89f7bf0, type: 3}
+--- !u!1 &1459024583 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6102750617446068211, guid: 72d981a89757842b0bf9b825884c5d81,
+    type: 3}
+  m_PrefabInstance: {fileID: 850409362}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1459024584 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6102750617446068220, guid: 72d981a89757842b0bf9b825884c5d81,
@@ -6076,7 +6100,7 @@ PrefabInstance:
     - target: {fileID: 4148793698584284988, guid: ae1579805fa68b2408db008e71c8e4fa,
         type: 3}
       propertyPath: coins.Array.size
-      value: 4
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 4148793698584284988, guid: ae1579805fa68b2408db008e71c8e4fa,
         type: 3}
@@ -6123,6 +6147,31 @@ PrefabInstance:
       propertyPath: coins.Array.data[3]
       value: 
       objectReference: {fileID: 644445581}
+    - target: {fileID: 4148793698584284988, guid: ae1579805fa68b2408db008e71c8e4fa,
+        type: 3}
+      propertyPath: coins.Array.data[4]
+      value: 
+      objectReference: {fileID: 2133256354}
+    - target: {fileID: 4148793698584284988, guid: ae1579805fa68b2408db008e71c8e4fa,
+        type: 3}
+      propertyPath: coins.Array.data[5]
+      value: 
+      objectReference: {fileID: 304665893}
+    - target: {fileID: 4148793698584284988, guid: ae1579805fa68b2408db008e71c8e4fa,
+        type: 3}
+      propertyPath: coins.Array.data[6]
+      value: 
+      objectReference: {fileID: 1459024583}
+    - target: {fileID: 4148793698584284988, guid: ae1579805fa68b2408db008e71c8e4fa,
+        type: 3}
+      propertyPath: coins.Array.data[7]
+      value: 
+      objectReference: {fileID: 242842783}
+    - target: {fileID: 4148793698584284988, guid: ae1579805fa68b2408db008e71c8e4fa,
+        type: 3}
+      propertyPath: coins.Array.data[8]
+      value: 
+      objectReference: {fileID: 1293325520}
     - target: {fileID: 4148793698584284989, guid: ae1579805fa68b2408db008e71c8e4fa,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -7252,6 +7301,12 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4809255288549338, guid: 6acf036e14cf86b4dbc2f4bbc89f7bf0,
     type: 3}
   m_PrefabInstance: {fileID: 2119275740}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &2133256354 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6102750617446068211, guid: 72d981a89757842b0bf9b825884c5d81,
+    type: 3}
+  m_PrefabInstance: {fileID: 1619740141}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2133457395
 PrefabInstance:
