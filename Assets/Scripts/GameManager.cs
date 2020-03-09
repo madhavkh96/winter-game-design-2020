@@ -71,8 +71,15 @@ public class GameManager : MonoBehaviour
         reload_btn.onClick.AddListener(() => ReloadLevel());
         bestTime.text = "Time to beat : 30.00";
         gameAudioSource = AudioManager.instance.gameObject.GetComponent<AudioSource>();
-        if(isTutorial)
+        if (isTutorial)
             gameAudioSource.PlayOneShot(AudioManager.instance.introClip);
+        else {
+            canMove = true;
+            canShoot = true;
+            canRun = true;
+            canGrapple = true;
+            canJump = true;
+        }
     }
 
     private void Update()

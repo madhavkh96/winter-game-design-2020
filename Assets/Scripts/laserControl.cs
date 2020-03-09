@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class laserControl : MonoBehaviour
+public class LaserControl : MonoBehaviour
 {
     public float laserSpeed = 5f;
     public float laserLife = 5f;
@@ -30,11 +30,13 @@ public class laserControl : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.tag == "Player"){
+        Debug.Log(other.gameObject.tag);
+
+        if(other.gameObject.CompareTag("Player")){
             other.gameObject.GetComponent<Respawner>().TakeDamage(damage);
             Destroy(gameObject);
         }
-        else if (other.gameObject.tag == "Ground" || other.gameObject.tag == "Wall")
+        else if (other.gameObject.CompareTag("Ground") || other.gameObject.CompareTag("Wall"))
         {
             Destroy(gameObject);
         }

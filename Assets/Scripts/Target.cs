@@ -3,23 +3,25 @@ using UnityEngine.UI;
 
 public class Target : MonoBehaviour
 {
-    public float health = 50f;
+    public float curr_health = 50f;
 
     public GameObject healthBarUI;
-    public Slider slider;
+    public Image healthBar;
+
+    private float initial_health;
 
     void Start()
     {
-        slider.value = health;
+        initial_health = curr_health;
+        healthBar.fillAmount = curr_health / initial_health;
     }
 
     public void TakeDamage(float amount)
     {
         healthBarUI.SetActive(true);
-        health -= amount;
-        slider.value = health;
-        //Debug.Log(health);
-        if (health <= 0f)
+        curr_health -= amount;
+        healthBar.fillAmount = curr_health / initial_health;
+        if (curr_health <= 0f)
         {
             Die();
         }
