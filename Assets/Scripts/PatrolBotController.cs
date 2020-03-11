@@ -28,6 +28,10 @@ public class PatrolBotController : MonoBehaviour
         patrolBot = GetComponent<Transform>();
         player = GameObject.FindGameObjectWithTag("Player");
         laserCD = laserFireTime;
+
+        //Endpoint1 += patrolBot.localPosition;
+        //Endpoint2 += patrolBot.localPosition;
+
     }
 
     // Update is called once per frame
@@ -75,7 +79,7 @@ public class PatrolBotController : MonoBehaviour
             }
             else{
                 var direction = heading / heading.magnitude;
-                patrolBot.position += direction * speed * Time.deltaTime;
+                patrolBot.localPosition += direction * speed * Time.deltaTime;
             }
         }
         else{
@@ -86,7 +90,7 @@ public class PatrolBotController : MonoBehaviour
             }
             else{
                 var direction = heading / heading.magnitude;
-                patrolBot.position += direction * speed * Time.deltaTime;
+                patrolBot.localPosition += direction * speed * Time.deltaTime;
             }
         }
     }

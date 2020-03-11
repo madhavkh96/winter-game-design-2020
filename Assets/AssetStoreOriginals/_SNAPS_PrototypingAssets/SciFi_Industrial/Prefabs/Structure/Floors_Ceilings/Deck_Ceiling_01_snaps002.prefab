@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 65909924639502826}
   m_Layer: 0
   m_Name: Deck_Ceiling_01_snaps002
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295

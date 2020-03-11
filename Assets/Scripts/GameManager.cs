@@ -20,9 +20,18 @@ public class GameManager : MonoBehaviour
     private Button apply_btn;
     internal float sensitivity;
     private TextMeshProUGUI senstivity_output;
-    public GameObject[] coins;
+    
+    public GameObject[] tutorial_coins;
 
-    private float timer = 0;
+    public GameObject[] level1_coins;
+
+    public GameObject[] level2_coins;
+
+    
+    
+    private float tutorialTimer = 0;
+    private float level1Timer = 0;
+    private float level2Timer = 0;
 
     private Button reload_btn;
 
@@ -38,6 +47,16 @@ public class GameManager : MonoBehaviour
     internal Image grapple_availableImage;
 
 
+
+    //Level bools
+    public enum CurrentLevel { 
+        tutorialLevel,
+        connector1,
+        level1,
+        connector2,
+        level2,
+    }
+
     //Controlling actions for tutorial.
     internal bool canLookAround = true;
     internal bool canMove = false;
@@ -48,6 +67,8 @@ public class GameManager : MonoBehaviour
     internal bool countTimer = true;
     internal bool isRespawning = false;
     private AudioSource gameAudioSource;
+
+    public CurrentLevel currentLevel;
 
     private void Awake()
     {
@@ -71,6 +92,8 @@ public class GameManager : MonoBehaviour
         reload_btn.onClick.AddListener(() => ReloadLevel());
         bestTime.text = "Time to beat : 30.00";
         gameAudioSource = AudioManager.instance.gameObject.GetComponent<AudioSource>();
+        currentLevel = CurrentLevel.tutorialLevel;
+
         if (isTutorial)
             gameAudioSource.PlayOneShot(AudioManager.instance.introClip);
         else {
@@ -93,6 +116,35 @@ public class GameManager : MonoBehaviour
             countTimer = true;
         }
 
+        PauseMenuHandler();
+
+        if (isRespawning) Time.timeScale = 0.0f;
+        else Time.timeScale = 1.0f;
+
+        TimerHandler();
+
+    }
+
+
+    void AudioHandler() {
+        switch (currentLevel) {
+            case CurrentLevel.connector1:
+                gameAudioSource.PlayOneShot(AudioManager.instance.connector1);
+                break;
+            case CurrentLevel.level1:
+                gameAudioSource.PlayOneShot(AudioManager.instance.level1Clip);
+                break; 
+            case CurrentLevel.level2:
+                gameAudioSource.PlayOneShot(AudioManager.instance.connector2); 
+                break;
+            case CurrentLevel.connector2:
+                gameAudioSource.PlayOneShot(AudioManager.instance.level2Clip);
+                break;
+        }
+    
+    }
+
+    void PauseMenuHandler() {
         if (pauseMenuActive)
         {
             countTimer = false;
@@ -110,20 +162,44 @@ public class GameManager : MonoBehaviour
             else if (sensitivity > 8 && sensitivity <= 10)
                 senstivity_output.text = "ULTRA HIGH";
         }
-        else {
+        else
+        {
             countTimer = true;
             Time.timeScale = 1.0f;
             pauseMenu.SetActive(false);
         }
+    }
 
-        if (isRespawning) Time.timeScale = 0.0f;
-        else Time.timeScale = 1.0f;
 
-        if (HUDscoreTracker.instance.score < coins.Length && countTimer)
-        {
-            timer += Time.unscaledDeltaTime;
-            timeText.text = timer.ToString("000.00");
-        }
+    void TimerHandler() {
+
+        switch (currentLevel) {
+
+            case CurrentLevel.tutorialLevel:
+                if (HUDscoreTracker.instance.score < tutorial_coins.Length && countTimer)
+                {
+                    tutorialTimer += Time.unscaledDeltaTime;
+                    timeText.text = tutorialTimer.ToString("000.00");
+                }
+                break;
+            case CurrentLevel.level1:
+                if (HUDscoreTracker.instance.score < level1_coins.Length && countTimer) {
+                    level1Timer += Time.unscaledDeltaTime;
+                    timeText.text = level1Timer.ToString("000.00");
+                }
+                break;
+            case CurrentLevel.level2:
+                if (HUDscoreTracker.instance.score < level2_coins.Length && countTimer)
+                {
+                    level2Timer += Time.unscaledDeltaTime;
+                    timeText.text = level2Timer.ToString("000.00");
+                }
+                break;
+            default:
+                Debug.Log("incorrect Level");
+                break;
+        
+        }  
     }
 
     void ReloadLevel() {
