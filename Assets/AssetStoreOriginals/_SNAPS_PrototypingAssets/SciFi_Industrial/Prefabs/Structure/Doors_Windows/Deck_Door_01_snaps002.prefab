@@ -274,6 +274,14 @@ MonoBehaviour:
   doorAnimator: {fileID: 4171832286740962331}
   m_Tutorial: 0
   tutorialText: {fileID: 0}
+  m_CanJump: 0
+  m_CanRun: 0
+  m_CanGrapple: 0
+  m_CanShoot: 0
+  tutorialComplete: 0
+  level1Start: 0
+  level1end: 0
+  level2Start: 0
 --- !u!1 &8058591452448959932
 GameObject:
   m_ObjectHideFlags: 0

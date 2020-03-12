@@ -18,6 +18,11 @@ public class Triggers : MonoBehaviour
     public bool m_CanRun;
     public bool m_CanGrapple;
     public bool m_CanShoot;
+    [Header("------------------------------------------------")]
+    public bool tutorialComplete;
+    public bool level1Start;
+    public bool level1end;
+    public bool level2Start;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -39,6 +44,22 @@ public class Triggers : MonoBehaviour
                 GameObject.Find("Player Body").GetComponent<AudioSource>().PlayOneShot(AudioManager.instance.grappleReloaded);
             }
             if (m_CanShoot) { GameManager.instance.canShoot = true; }
+
+            if (tutorialComplete) {
+                GameManager.instance.currentLevel = GameManager.CurrentLevel.connector1;
+                Respawner.instance.respawnPoint = GameManager.instance.respawnConnector1;
+            }
+            if (level1Start) {
+                GameManager.instance.currentLevel = GameManager.CurrentLevel.level1;
+                Respawner.instance.respawnPoint = GameManager.instance.respawnLevel1;
+            }
+            if (level1end) {
+                GameManager.instance.currentLevel = GameManager.CurrentLevel.connector2;
+            }
+            if (level2Start) {
+                GameManager.instance.currentLevel = GameManager.CurrentLevel.level2;
+                Respawner.instance.respawnPoint = GameManager.instance.respawnLevel2;
+            }
         }
     }
 }

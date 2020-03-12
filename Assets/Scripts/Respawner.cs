@@ -20,10 +20,23 @@ public class Respawner : MonoBehaviour
     public GameObject healthBarUI;
     public Image healthBarImage;
 
+    public static Respawner instance;
+
     private GUIStyle guiFontStyle = new GUIStyle();
 	private int deathCount = 0;
 
-	void Start()
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else {
+            Destroy(gameObject);
+        }
+    }
+
+    void Start()
 	{
 		guiFontStyle.fontSize = 32;
         guiFontStyle.normal.textColor = Color.red;
@@ -32,6 +45,7 @@ public class Respawner : MonoBehaviour
     }
     public void playerRespawn(string causeOfDeath){
         //currently resets player to one standard spawn point
+        health = maxHealth;
         healthBarImage.fillAmount = maxHealth / maxHealth;
         Transform playerTransform = GetComponentInParent<Transform>();
         playerTransform.position = respawnPoint;
@@ -40,6 +54,7 @@ public class Respawner : MonoBehaviour
         causeOfDeathMessage = "Player died from " + causeOfDeath;
         deathCount++;
         deathCounterText.text = deathCount.ToString();
+        GameManager.instance.deathCounter++;
         StartCoroutine("DeathPrompt");
     }
     void OnGUI()

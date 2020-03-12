@@ -24,10 +24,6 @@ public class MenuManager : MonoBehaviour
     }
 
     void QuitButton() {
-//#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-//#elif
-        //Application.Quit();
-//#endif
+        Application.Quit();
     }
 }

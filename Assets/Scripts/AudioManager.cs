@@ -12,6 +12,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip level1Clip;
     public AudioClip connector2;
     public AudioClip level2Clip;
+    public AudioClip music;
 
 
 

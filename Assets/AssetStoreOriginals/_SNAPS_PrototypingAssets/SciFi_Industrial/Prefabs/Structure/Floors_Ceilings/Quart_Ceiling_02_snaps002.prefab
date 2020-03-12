@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4513165585045371223}
   m_Layer: 0
   m_Name: Quart_Ceiling_02_snaps002
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295

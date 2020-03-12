@@ -195,7 +195,7 @@ public class PlayerController : MonoBehaviour
         duck_button = Input.GetButton("Duck");
         jump_button = Input.GetButton("Jump");
         grapple_button = Input.GetButton("Grapple");
-        pause_button = Input.GetButtonDown("Pause");
+        pause_button = Input.GetButton("Pause");
 
         // Detects the state the player currently is.
         CharacterState = CurrentMovementStage();
@@ -217,6 +217,7 @@ public class PlayerController : MonoBehaviour
     {
         if (pause_button)
         {
+            Debug.Log("Current State = " + pause_button);
             GameManager.instance.pauseMenuActive = !GameManager.instance.pauseMenuActive;
         }
 
